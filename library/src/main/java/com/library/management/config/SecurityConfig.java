@@ -1,0 +1,151 @@
+package com.library.management.config;
+
+import com.library.management.auth.jwt.JwtAuthenticationFilter;
+import com.library.management.auth.userdetails.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomUserDetailsService customUserDetailsService;
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+
+        return new BCryptPasswordEncoder();
+
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(customUserDetailsService);
+
+        provider.setPasswordEncoder(passwordEncoder());
+
+        return provider;
+
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration) throws Exception {
+
+        return configuration.getAuthenticationManager();
+
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
+        http
+                .cors(cors -> {
+                })
+                .csrf(csrf -> csrf.disable())
+
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        ))
+
+                .authorizeHttpRequests(auth -> auth
+
+                                .requestMatchers(
+                                        "/api/auth/login",
+                                        "/api/auth/refresh-token",
+                                        "/api/users/register",
+
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/v3/api-docs/**",
+                                        "/v3/api-docs",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll()
+
+
+                                .requestMatchers("/api/books/**")
+                                .hasAnyRole(
+                                        "ADMIN",
+                                        "LIBRARIAN",
+                                        "STUDENT"
+                                )
+
+                                .requestMatchers("/api/dashboard/student/**")
+                                .hasRole("STUDENT")
+                                .requestMatchers("/api/dashboard/borrowed-book/**")
+                                .hasRole("STUDENT")
+
+                                .requestMatchers(
+                                        "/api/borrow/history/**",
+                                        "/api/borrow/current/**"
+                                )
+                                .hasAnyRole(
+                                        "ADMIN",
+                                        "LIBRARIAN",
+                                        "STUDENT"
+                                )
+                                .requestMatchers("/api/borrow/**")
+                                .hasAnyRole(
+                                        "ADMIN",
+                                        "LIBRARIAN"
+                                )
+
+
+                                .requestMatchers("/api/dashboard/**")
+                                .hasAnyRole(
+                                        "ADMIN",
+                                        "LIBRARIAN"
+                                )
+
+
+                                .requestMatchers(
+                                        "/api/users/me",
+                                        "/api/users/profile",
+                                        "/api/users/change-password"
+                                )
+                                .hasAnyRole(
+                                        "ADMIN",
+                                        "LIBRARIAN",
+                                        "STUDENT"
+                                )
+
+
+
+                                .requestMatchers("/api/users")
+                                .hasRole("ADMIN")
+
+                                .requestMatchers("/api/users/{id}")
+                                .hasRole("ADMIN")
+                                .anyRequest().authenticated()
+
+                )
+
+                .authenticationProvider(authenticationProvider())
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
+
+        return http.build();
+
+    }
+}

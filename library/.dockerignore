@@ -1,0 +1,12 @@
+target
+.idea
+.git
+.gitignore
+Dockerfile
+README.md
+HELP.md
+
+*.iml
+*.log
+
+uploads

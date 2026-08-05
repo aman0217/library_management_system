@@ -1,0 +1,8 @@
+.idea/
+
+library/.idea/
+library/target/
+library/uploads/
+
+library-frontend/node_modules/
+library-frontend/dist/
