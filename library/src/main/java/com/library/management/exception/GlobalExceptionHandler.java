@@ -106,12 +106,14 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request) {
 
+        ex.printStackTrace();
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.builder()
                         .timestamp(LocalDateTime.now())
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                        .message("An unexpected error occurred.")
+                        .message(ex.getMessage())   // <-- yahan change
                         .path(request.getRequestURI())
                         .errors(null)
                         .build());
