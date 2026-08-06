@@ -22,4 +22,4 @@ COPY --from=builder /app/target/*.jar library.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java","-jar","library.jar"]
+ENTRYPOINT ["java","-Xms128m","-Xmx384m","-jar","library.jar"]
