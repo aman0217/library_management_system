@@ -41,7 +41,7 @@ function Login() {
 const [rememberMe, setRememberMe] = useState(false);
 
     const handleLogin = async (e) => {
-
+console.log("Login button clicked");
         e.preventDefault();
 
         try {
