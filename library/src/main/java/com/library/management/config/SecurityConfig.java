@@ -1,5 +1,5 @@
 package com.library.management.config;
-
+import org.springframework.web.cors.CorsConfigurationSource;
 import com.library.management.auth.jwt.JwtAuthenticationFilter;
 import com.library.management.auth.userdetails.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
-
+    private final CorsConfigurationSource corsConfigurationSource;
     @Bean
     public PasswordEncoder passwordEncoder() {
 
@@ -56,8 +56,7 @@ public class SecurityConfig {
             throws Exception {
 
         http
-                .cors(cors -> {
-                })
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
