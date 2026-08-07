@@ -110,7 +110,7 @@ function BookDetailsDialog({
 
                                 <Box
                                     component="img"
-                                    src={`http://localhost:8080${book.coverImage}`}
+                                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${book.coverImage}`}
                                     sx={{
                                         width: 180,
                                         height: 240,
