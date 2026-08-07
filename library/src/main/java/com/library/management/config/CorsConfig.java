@@ -18,8 +18,9 @@ public class CorsConfig {
 
         config.setAllowCredentials(true);
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173"
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "https://library-management-system-frontend-obuv.onrender.com"
         ));
 
         config.setAllowedHeaders(List.of("*"));
