@@ -11,14 +11,17 @@ import com.library.management.repository.BookRepository;
 import com.library.management.repository.IssueRecordRepository;
 import com.library.management.repository.UserRepository;
 import com.library.management.service.interfaces.IssueService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import com.library.management.service.interfaces.NotificationService;
 import com.library.management.email.EmailService;
-import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,65 +33,115 @@ public class IssueServiceImpl implements IssueService {
     private final NotificationService notificationService;
     private final EmailService emailService;
 
+
+    // =========================================================
+    // ISSUE BOOK
+    // =========================================================
+
     @Override
+    @Transactional
     public IssueResponse issueBook(IssueBookRequest request) {
 
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
+                        new ResourceNotFoundException("User not found")
+                );
 
-        // Prevent duplicate issue of same book to same student
+
+        // Prevent duplicate active issue
         if (issueRecordRepository.existsByUserIdAndBookIdAndReturnedFalse(
                 request.getUserId(),
-                request.getBookId())) {
+                request.getBookId()
+        )) {
 
             throw new BadRequestException(
                     "This book is already issued to this student."
             );
         }
 
+
         Book book = bookRepository.findById(request.getBookId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Book not found"));
+                        new ResourceNotFoundException("Book not found")
+                );
+
 
         if (!book.getActive()) {
-            throw new BadRequestException("Book is inactive");
+
+            throw new BadRequestException(
+                    "Book is inactive"
+            );
         }
 
+
         if (book.getAvailableCopies() <= 0) {
-            throw new BadRequestException("Book is not available");
+
+            throw new BadRequestException(
+                    "Book is not available"
+            );
         }
+
+
+        LocalDate issueDate = LocalDate.now();
+
+        LocalDate dueDate = issueDate.plusDays(15);
+
 
         IssueRecord issueRecord = IssueRecord.builder()
                 .user(user)
                 .book(book)
-                .issueDate(java.time.LocalDate.now())
-                .dueDate(java.time.LocalDate.now().plusDays(15))
+                .issueDate(issueDate)
+                .dueDate(dueDate)
                 .returned(false)
                 .build();
 
-        book.setAvailableCopies(book.getAvailableCopies() - 1);
+
+        // Reduce available copies
+        book.setAvailableCopies(
+                book.getAvailableCopies() - 1
+        );
 
         bookRepository.save(book);
 
-        IssueRecord savedIssue = issueRecordRepository.save(issueRecord);
-        // Student Notification
+
+        IssueRecord savedIssue =
+                issueRecordRepository.save(issueRecord);
+
+
+        // =====================================================
+        // STUDENT NOTIFICATION
+        // =====================================================
+
         notificationService.notifyStudent(
                 user.getId(),
                 "Book Borrowed",
-                "You have successfully borrowed \"" + book.getTitle() + "\".",
+                "You have successfully borrowed \""
+                        + book.getTitle()
+                        + "\".",
                 "SUCCESS"
         );
 
-// Admin Notification
+
+        // =====================================================
+        // ADMIN NOTIFICATION
+        // =====================================================
+
         notificationService.notifyAdmins(
                 "Book Borrowed",
-                user.getFirstName() + " " + user.getLastName()
-                        + " borrowed \"" + book.getTitle() + "\".",
+                user.getFirstName()
+                        + " "
+                        + user.getLastName()
+                        + " borrowed \""
+                        + book.getTitle()
+                        + "\".",
                 "INFO"
         );
 
-// Student Email
+
+        // =====================================================
+        // EMAIL
+        // =====================================================
+
         emailService.sendBorrowEmail(
                 user.getEmail(),
                 user.getFirstName(),
@@ -96,191 +149,286 @@ public class IssueServiceImpl implements IssueService {
                 savedIssue.getDueDate().toString()
         );
 
+
         return IssueResponse.builder()
                 .issueId(savedIssue.getId())
-                .studentName(user.getFirstName() + " " + user.getLastName())
+                .studentName(
+                        user.getFirstName()
+                                + " "
+                                + user.getLastName()
+                )
                 .bookTitle(book.getTitle())
+                .author(book.getAuthor())
+                .category(book.getCategory())
                 .issueDate(savedIssue.getIssueDate())
                 .dueDate(savedIssue.getDueDate())
                 .returned(savedIssue.getReturned())
+                .status("BORROWED")
                 .build();
     }
+
+
+    // =========================================================
+    // RETURN BOOK
+    // =========================================================
+
     @Override
+    @Transactional
     public IssueResponse returnBook(Long issueId) {
 
-        IssueRecord issueRecord = issueRecordRepository.findById(issueId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Issue record not found"));
+        IssueRecord issueRecord =
+                issueRecordRepository.findById(issueId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Issue record not found"
+                                )
+                        );
+
 
         if (issueRecord.getReturned()) {
-            throw new BadRequestException("Book already returned");
+
+            throw new BadRequestException(
+                    "Book already returned"
+            );
         }
 
-        // Return date
-        java.time.LocalDate returnDate = java.time.LocalDate.now();
 
-        issueRecord.setReturned(true);
-        issueRecord.setReturnDate(returnDate);
+        User user = issueRecord.getUser();
 
         Book book = issueRecord.getBook();
 
+
+        LocalDate returnDate = LocalDate.now();
+
+
+        issueRecord.setReturned(true);
+
+        issueRecord.setReturnDate(returnDate);
+
+
         // Increase available copies
-        book.setAvailableCopies(book.getAvailableCopies() + 1);
+        book.setAvailableCopies(
+                book.getAvailableCopies() + 1
+        );
 
         bookRepository.save(book);
 
-        IssueRecord updatedIssue = issueRecordRepository.save(issueRecord);
 
-        // Fine calculation
+        IssueRecord updatedIssue =
+                issueRecordRepository.save(issueRecord);
+
+
+        // =====================================================
+        // FINE
+        // =====================================================
+
         long lateDays = 0;
+
         double fineAmount = 0.0;
 
-        if (returnDate.isAfter(updatedIssue.getDueDate())) {
 
-            lateDays = java.time.temporal.ChronoUnit.DAYS.between(
+        if (returnDate.isAfter(
+                updatedIssue.getDueDate()
+        )) {
+
+            lateDays = ChronoUnit.DAYS.between(
                     updatedIssue.getDueDate(),
                     returnDate
             );
 
-            fineAmount = lateDays * 10.0; // ₹10 per day
+            fineAmount = lateDays * 10.0;
         }
 
-        User user = updatedIssue.getUser();
-        // Student Notification
+
+        // =====================================================
+        // STUDENT NOTIFICATION
+        // =====================================================
+
         notificationService.notifyStudent(
                 user.getId(),
                 "Book Returned",
-                "You have successfully returned \"" + book.getTitle() + "\".",
+                "You have successfully returned \""
+                        + book.getTitle()
+                        + "\".",
                 "SUCCESS"
         );
 
-// Admin Notification
+
+        // =====================================================
+        // ADMIN NOTIFICATION
+        // =====================================================
+
         notificationService.notifyAdmins(
                 "Book Returned",
-                user.getFirstName() + " " + user.getLastName()
-                        + " returned \"" + book.getTitle() + "\".",
+                user.getFirstName()
+                        + " "
+                        + user.getLastName()
+                        + " returned \""
+                        + book.getTitle()
+                        + "\".",
                 "INFO"
         );
 
-// Student Email
+
+        // =====================================================
+        // EMAIL
+        // =====================================================
+
         emailService.sendReturnEmail(
                 user.getEmail(),
                 user.getFirstName(),
                 book.getTitle()
         );
 
+
         return IssueResponse.builder()
                 .issueId(updatedIssue.getId())
-                .studentName(user.getFirstName() + " " + user.getLastName())
+                .studentName(
+                        user.getFirstName()
+                                + " "
+                                + user.getLastName()
+                )
                 .bookTitle(book.getTitle())
+                .author(book.getAuthor())
+                .category(book.getCategory())
                 .issueDate(updatedIssue.getIssueDate())
                 .dueDate(updatedIssue.getDueDate())
                 .returnDate(returnDate)
                 .lateDays(lateDays)
                 .fineAmount(fineAmount)
-                .returned(updatedIssue.getReturned())
+                .returned(true)
+                .status("RETURNED")
                 .build();
     }
+
+
+    // =========================================================
+    // BORROW HISTORY
+    // =========================================================
+
     @Override
+    @Transactional(readOnly = true)
     public List<IssueResponse> getBorrowHistory(Long userId) {
 
-        List<IssueRecord> issueRecords =
-                issueRecordRepository.findByUserIdOrderByIssueDateDesc(userId);
+        List<IssueRecord> records =
+                issueRecordRepository
+                        .findByUserIdOrderByIssueDateDesc(userId);
 
-        return issueRecords.stream()
-                .map(issue -> {
 
-                    long lateDays = 0;
-                    double fineAmount = 0;
-
-                    if (issue.getReturnDate() != null &&
-                            issue.getReturnDate().isAfter(issue.getDueDate())) {
-
-                        lateDays = java.time.temporal.ChronoUnit.DAYS.between(
-                                issue.getDueDate(),
-                                issue.getReturnDate());
-
-                        fineAmount = lateDays * 10;
-                    }
-
-                    return IssueResponse.builder()
-                            .issueId(issue.getId())
-                            .studentName(
-                                    issue.getUser().getFirstName() + " "
-                                            + issue.getUser().getLastName())
-                            .bookTitle(issue.getBook().getTitle())
-                            .author(issue.getBook().getAuthor())
-
-                            .category(issue.getBook().getCategory())
-
-                            .status(
-                                    issue.getReturned()
-                                            ? "RETURNED"
-                                            : "BORROWED"
-                            )
-                            .issueDate(issue.getIssueDate())
-                            .dueDate(issue.getDueDate())
-                            .returnDate(issue.getReturnDate())
-                            .lateDays(lateDays)
-                            .fineAmount(fineAmount)
-                            .returned(issue.getReturned())
-                            .build();
-
-                })
+        return records.stream()
+                .map(this::convertToResponse)
                 .toList();
     }
+
+
+    // =========================================================
+    // CURRENT BORROWED BOOKS
+    // =========================================================
+
     @Override
-    public List<IssueResponse> getCurrentBorrowedBooks(Long userId) {
+    @Transactional(readOnly = true)
+    public List<IssueResponse> getCurrentBorrowedBooks(
+            Long userId
+    ) {
 
-        List<IssueRecord> issueRecords =
-                issueRecordRepository.findByUserIdAndReturnedFalseOrderByIssueDateDesc(userId);
+        List<IssueRecord> records =
+                issueRecordRepository
+                        .findByUserIdAndReturnedFalseOrderByIssueDateDesc(
+                                userId
+                        );
 
-        return issueRecords.stream()
-                .map(issue -> IssueResponse.builder()
-                        .issueId(issue.getId())
-                        .studentName(
-                                issue.getUser().getFirstName() + " "
-                                        + issue.getUser().getLastName())
-                        .bookTitle(issue.getBook().getTitle())
-                        .issueDate(issue.getIssueDate())
-                        .dueDate(issue.getDueDate())
-                        .returnDate(null)
-                        .lateDays(0L)
-                        .fineAmount(0.0)
-                        .returned(false)
-                        .build())
+
+        return records.stream()
+                .map(this::convertToResponse)
                 .toList();
     }
+
+
+    // =========================================================
+    // OVERDUE BOOKS
+    // =========================================================
+
     @Override
+    @Transactional(readOnly = true)
     public List<IssueResponse> getOverdueBooks() {
 
-        List<IssueRecord> issueRecords =
-                issueRecordRepository.findByReturnedFalseAndDueDateBefore(LocalDate.now());
+        List<IssueRecord> records =
+                issueRecordRepository
+                        .findByReturnedFalseAndDueDateBefore(
+                                LocalDate.now()
+                        );
 
-        return issueRecords.stream()
-                .map(issue -> {
 
-                    long lateDays = ChronoUnit.DAYS.between(
-                            issue.getDueDate(),
-                            LocalDate.now());
-
-                    double fineAmount = lateDays * 10;
-
-                    return IssueResponse.builder()
-                            .issueId(issue.getId())
-                            .studentName(
-                                    issue.getUser().getFirstName() + " "
-                                            + issue.getUser().getLastName())
-                            .bookTitle(issue.getBook().getTitle())
-                            .issueDate(issue.getIssueDate())
-                            .dueDate(issue.getDueDate())
-                            .returnDate(null)
-                            .lateDays(lateDays)
-                            .fineAmount(fineAmount)
-                            .returned(false)
-                            .build();
-
-                })
+        return records.stream()
+                .map(this::convertToResponse)
                 .toList();
+    }
+
+
+    // =========================================================
+    // COMMON RESPONSE CONVERTER
+    // =========================================================
+
+    private IssueResponse convertToResponse(
+            IssueRecord issue
+    ) {
+
+        long lateDays = 0;
+
+        double fineAmount = 0.0;
+
+
+        if (issue.getReturnDate() != null
+                && issue.getReturnDate()
+                .isAfter(issue.getDueDate())) {
+
+            lateDays = ChronoUnit.DAYS.between(
+                    issue.getDueDate(),
+                    issue.getReturnDate()
+            );
+
+            fineAmount = lateDays * 10.0;
+        }
+
+
+        User user = issue.getUser();
+
+        Book book = issue.getBook();
+
+
+        return IssueResponse.builder()
+                .issueId(issue.getId())
+
+                .studentName(
+                        user.getFirstName()
+                                + " "
+                                + user.getLastName()
+                )
+
+                .bookTitle(book.getTitle())
+
+                .author(book.getAuthor())
+
+                .category(book.getCategory())
+
+                .status(
+                        Boolean.TRUE.equals(issue.getReturned())
+                                ? "RETURNED"
+                                : "BORROWED"
+                )
+
+                .issueDate(issue.getIssueDate())
+
+                .dueDate(issue.getDueDate())
+
+                .returnDate(issue.getReturnDate())
+
+                .lateDays(lateDays)
+
+                .fineAmount(fineAmount)
+
+                .returned(issue.getReturned())
+
+                .build();
     }
 }

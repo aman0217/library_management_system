@@ -1,35 +1,34 @@
 package com.library.management.service.impl;
-import com.library.management.dto.response.FineHistoryResponse;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import com.library.management.entity.Book;
-import com.library.management.dto.response.DueSoonBookResponse;
+
 import com.library.management.dto.response.BorrowedBookDetailResponse;
 import com.library.management.dto.response.BorrowedBookResponse;
 import com.library.management.dto.response.DashboardResponse;
+import com.library.management.dto.response.DueSoonBookResponse;
+import com.library.management.dto.response.FineHistoryResponse;
+import com.library.management.dto.response.MonthlyBorrowStatisticsResponse;
+import com.library.management.dto.response.MostBorrowedBookResponse;
+import com.library.management.dto.response.NeverBorrowedBookResponse;
+import com.library.management.dto.response.ReportResponse;
+import com.library.management.dto.response.StudentDashboardResponse;
+import com.library.management.dto.response.TopActiveStudentResponse;
+import com.library.management.entity.Book;
 import com.library.management.entity.IssueRecord;
 import com.library.management.repository.BookRepository;
 import com.library.management.repository.IssueRecordRepository;
+import com.library.management.repository.NotificationRepository;
 import com.library.management.repository.UserRepository;
 import com.library.management.service.interfaces.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.library.management.dto.response.MostBorrowedBookResponse;
-import com.library.management.dto.response.ReportResponse;
-
-import com.library.management.repository.projection.MostBorrowedBookProjection;
-import com.library.management.repository.NotificationRepository;
-import java.util.List;
-import com.library.management.dto.response.TopActiveStudentResponse;
-import com.library.management.dto.response.MonthlyBorrowStatisticsResponse;
-import com.library.management.dto.response.NeverBorrowedBookResponse;
-import com.library.management.dto.response.StudentDashboardResponse;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class DashboardServiceImpl implements DashboardService {
 
     private final UserRepository userRepository;
@@ -37,6 +36,10 @@ public class DashboardServiceImpl implements DashboardService {
     private final IssueRecordRepository issueRecordRepository;
     private final NotificationRepository notificationRepository;
 
+
+    // =========================================================
+    // ADMIN DASHBOARD
+    // =========================================================
 
     @Override
     public DashboardResponse getDashboardSummary() {
@@ -50,32 +53,37 @@ public class DashboardServiceImpl implements DashboardService {
                 .mapToLong(Book::getAvailableCopies)
                 .sum();
 
-        long borrowedBooks = issueRecordRepository.countByReturnedFalse();
-
+        long borrowedBooks =
+                issueRecordRepository.countByReturnedFalse();
 
         long activeBorrowings =
                 issueRecordRepository.countByReturnedFalse();
 
         long overdueBooks =
                 issueRecordRepository.countByReturnedFalseAndDueDateBefore(
-                        LocalDate.now());
+                        LocalDate.now()
+                );
 
-        double totalFineCollected = issueRecordRepository.findAll()
-                .stream()
-                .filter(IssueRecord::getReturned)
-                .filter(issue ->
-                        issue.getReturnDate() != null &&
-                                issue.getReturnDate().isAfter(issue.getDueDate()))
-                .mapToDouble(issue -> {
+        double totalFineCollected =
+                issueRecordRepository.findAll()
+                        .stream()
+                        .filter(IssueRecord::getReturned)
+                        .filter(issue ->
+                                issue.getReturnDate() != null &&
+                                        issue.getReturnDate()
+                                                .isAfter(issue.getDueDate())
+                        )
+                        .mapToDouble(issue -> {
 
-                    long lateDays = ChronoUnit.DAYS.between(
-                            issue.getDueDate(),
-                            issue.getReturnDate());
+                            long lateDays =
+                                    ChronoUnit.DAYS.between(
+                                            issue.getDueDate(),
+                                            issue.getReturnDate()
+                                    );
 
-                    return lateDays * 10.0;
-
-                })
-                .sum();
+                            return lateDays * 10.0;
+                        })
+                        .sum();
 
         return DashboardResponse.builder()
                 .totalUsers(totalUsers)
@@ -87,91 +95,147 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalFineCollected(totalFineCollected)
                 .build();
     }
+
+
+    // =========================================================
+    // MOST BORROWED BOOKS
+    // =========================================================
+
     @Override
     public List<MostBorrowedBookResponse> getMostBorrowedBooks() {
 
         return issueRecordRepository.getMostBorrowedBooks()
                 .stream()
-                .map(book -> MostBorrowedBookResponse.builder()
-                        .bookId(book.getBookId())
-                        .title(book.getTitle())
-                        .author(book.getAuthor())
-                        .borrowCount(book.getBorrowCount())
-                        .build())
+                .map(book ->
+                        MostBorrowedBookResponse.builder()
+                                .bookId(book.getBookId())
+                                .title(book.getTitle())
+                                .author(book.getAuthor())
+                                .borrowCount(book.getBorrowCount())
+                                .build()
+                )
                 .toList();
     }
+
+
+    // =========================================================
+    // TOP ACTIVE STUDENTS
+    // =========================================================
+
     @Override
     public List<TopActiveStudentResponse> getTopActiveStudents() {
 
         return issueRecordRepository.getTopActiveStudents()
                 .stream()
-                .map(student -> TopActiveStudentResponse.builder()
-                        .userId(student.getUserId())
-                        .studentName(
-                                student.getFirstName() + " " + student.getLastName()
-                        )
-                        .borrowCount(student.getBorrowCount())
-                        .build())
+                .map(student ->
+                        TopActiveStudentResponse.builder()
+                                .userId(student.getUserId())
+                                .studentName(
+                                        student.getFirstName()
+                                                + " "
+                                                + student.getLastName()
+                                )
+                                .borrowCount(student.getBorrowCount())
+                                .build()
+                )
                 .toList();
     }
-    @Override
-    public List<MonthlyBorrowStatisticsResponse> getMonthlyBorrowStatistics() {
 
-        return issueRecordRepository.getMonthlyBorrowStatistics()
+
+    // =========================================================
+    // MONTHLY BORROW STATISTICS
+    // =========================================================
+
+    @Override
+    public List<MonthlyBorrowStatisticsResponse>
+    getMonthlyBorrowStatistics() {
+
+        return issueRecordRepository
+                .getMonthlyBorrowStatistics()
                 .stream()
-                .map(stat -> MonthlyBorrowStatisticsResponse.builder()
-                        .year(stat.getYear())
-                        .month(stat.getMonth())
-                        .borrowCount(stat.getBorrowCount())
-                        .build())
+                .map(stat ->
+                        MonthlyBorrowStatisticsResponse.builder()
+                                .year(stat.getYear())
+                                .month(stat.getMonth())
+                                .borrowCount(stat.getBorrowCount())
+                                .build()
+                )
                 .toList();
     }
+
+
+    // =========================================================
+    // NEVER BORROWED BOOKS
+    // =========================================================
+
     @Override
     public List<NeverBorrowedBookResponse> getNeverBorrowedBooks() {
 
         return bookRepository.getNeverBorrowedBooks()
                 .stream()
-                .map(book -> NeverBorrowedBookResponse.builder()
-                        .bookId(book.getBookId())
-                        .title(book.getTitle())
-                        .author(book.getAuthor())
-                        .category(book.getCategory())
-                        .build())
+                .map(book ->
+                        NeverBorrowedBookResponse.builder()
+                                .bookId(book.getBookId())
+                                .title(book.getTitle())
+                                .author(book.getAuthor())
+                                .category(book.getCategory())
+                                .build()
+                )
                 .toList();
     }
+
+
+    // =========================================================
+    // STUDENT DASHBOARD
+    // =========================================================
+
     @Override
     public StudentDashboardResponse getStudentDashboard(Long userId) {
 
+        /*
+         * IMPORTANT:
+         * Purane repository methods ko hata diya gaya hai.
+         *
+         * Ab:
+         * findBorrowedBooks() -> current borrowed books
+         * findBorrowHistory() -> complete history
+         */
+
         long borrowedBooks =
                 issueRecordRepository
-                        .findByUserIdAndReturnedFalseOrderByIssueDateDesc(userId)
+                        .findBorrowedBooks(userId)
                         .size();
 
         long returnedBooks =
                 issueRecordRepository
-                        .findByUserIdOrderByIssueDateDesc(userId)
+                        .findBorrowHistory(userId)
                         .stream()
                         .filter(IssueRecord::getReturned)
                         .count();
 
         double pendingFine =
                 issueRecordRepository
-                        .findByUserIdAndReturnedFalseOrderByIssueDateDesc(userId)
+                        .findBorrowedBooks(userId)
                         .stream()
-                        .filter(issue -> issue.getDueDate().isBefore(LocalDate.now()))
+                        .filter(issue ->
+                                issue.getDueDate()
+                                        .isBefore(LocalDate.now())
+                        )
                         .mapToDouble(issue -> {
 
-                            long lateDays = ChronoUnit.DAYS.between(
-                                    issue.getDueDate(),
-                                    LocalDate.now());
+                            long lateDays =
+                                    ChronoUnit.DAYS.between(
+                                            issue.getDueDate(),
+                                            LocalDate.now()
+                                    );
 
                             return lateDays * 10.0;
-
                         })
                         .sum();
 
         long unreadNotifications =
-                notificationRepository.countByUserIdAndReadFalse(userId);
+                notificationRepository
+                        .countByUserIdAndReadFalse(userId);
 
         return StudentDashboardResponse.builder()
                 .borrowedBooks(borrowedBooks)
@@ -180,48 +244,57 @@ public class DashboardServiceImpl implements DashboardService {
                 .unreadNotifications(unreadNotifications)
                 .build();
     }
+
+
+    // =========================================================
+    // DUE SOON BOOKS
+    // =========================================================
+
     @Override
     public List<DueSoonBookResponse> getDueSoonBooks(Long userId) {
 
         LocalDate today = LocalDate.now();
 
-        LocalDate nextThreeDays = today.plusDays(3);
+        LocalDate nextThreeDays =
+                today.plusDays(3);
 
         return issueRecordRepository
-                .findByUserIdAndReturnedFalseAndDueDateBetween(
+                .findDueSoonBooks(
                         userId,
                         today,
                         nextThreeDays
                 )
                 .stream()
-                .map(issue -> DueSoonBookResponse.builder()
-
-                        .issueId(issue.getId())
-
-                        .title(issue.getBook().getTitle())
-
-                        .author(issue.getBook().getAuthor())
-
-                        .dueDate(issue.getDueDate())
-
-                        .remainingDays(
-                                ChronoUnit.DAYS.between(
-                                        today,
-                                        issue.getDueDate()
+                .map(issue ->
+                        DueSoonBookResponse.builder()
+                                .issueId(issue.getId())
+                                .title(issue.getBook().getTitle())
+                                .author(issue.getBook().getAuthor())
+                                .dueDate(issue.getDueDate())
+                                .remainingDays(
+                                        ChronoUnit.DAYS.between(
+                                                today,
+                                                issue.getDueDate()
+                                        )
                                 )
-                        )
-
-                        .build())
-
+                                .build()
+                )
                 .toList();
     }
+
+
+    // =========================================================
+    // CURRENT BORROWED BOOKS
+    // =========================================================
+
     @Override
-    public List<BorrowedBookResponse> getBorrowedBooks(Long userId) {
+    public List<BorrowedBookResponse>
+    getBorrowedBooks(Long userId) {
 
         LocalDate today = LocalDate.now();
 
         return issueRecordRepository
-                .findByUserIdAndReturnedFalseOrderByIssueDateDesc(userId)
+                .findBorrowedBooks(userId)
                 .stream()
                 .map(issue -> {
 
@@ -237,76 +310,67 @@ public class DashboardServiceImpl implements DashboardService {
 
                         status = "RETURNED";
 
-                    }
-
-                    else if (remainingDays < 0) {
+                    } else if (remainingDays < 0) {
 
                         status = "OVERDUE";
 
-                    }
-
-                    else if (remainingDays <= 3) {
+                    } else if (remainingDays <= 3) {
 
                         status = "DUE SOON";
 
-                    }
-
-                    else {
+                    } else {
 
                         status = "ACTIVE";
-
                     }
 
                     return BorrowedBookResponse.builder()
-
                             .issueId(issue.getId())
-
                             .bookId(issue.getBook().getId())
-
                             .title(issue.getBook().getTitle())
-
                             .author(issue.getBook().getAuthor())
-
                             .category(issue.getBook().getCategory())
-
                             .issueDate(issue.getIssueDate())
-
                             .dueDate(issue.getDueDate())
-
+                            .returnDate(issue.getReturnDate())
                             .returned(issue.getReturned())
-
                             .remainingDays(
                                     Math.max(remainingDays, 0)
                             )
-
                             .status(status)
-
                             .build();
-
                 })
-
                 .toList();
-
     }
-    @Override
-    public BorrowedBookDetailResponse getBorrowedBookDetails(Long issueId) {
 
-        IssueRecord issue = issueRecordRepository
-                .findById(issueId)
-                .orElseThrow(() ->
-                        new RuntimeException("Borrow record not found"));
+
+    // =========================================================
+    // BORROWED BOOK DETAILS
+    // =========================================================
+
+    @Override
+    public BorrowedBookDetailResponse
+    getBorrowedBookDetails(Long issueId) {
+
+        IssueRecord issue =
+                issueRecordRepository.findById(issueId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Borrow record not found"
+                                )
+                        );
 
         LocalDate today = LocalDate.now();
 
-        long remainingDays = issue.getReturned()
-                ? 0
-                : Math.max(
-                ChronoUnit.DAYS.between(
-                        today,
-                        issue.getDueDate()
-                ),
-                0
-        );
+        long remainingDays =
+                issue.getReturned()
+                        ? 0
+                        : Math.max(
+                        ChronoUnit.DAYS.between(
+                                today,
+                                issue.getDueDate()
+                        ),
+                        0
+                );
 
         String status;
 
@@ -325,115 +389,111 @@ public class DashboardServiceImpl implements DashboardService {
         } else {
 
             status = "ACTIVE";
-
         }
 
         double fine = 0;
 
-        if (!issue.getReturned() &&
-                issue.getDueDate().isBefore(today)) {
+        if (!issue.getReturned()
+                && issue.getDueDate().isBefore(today)) {
 
-            fine = ChronoUnit.DAYS.between(
-                    issue.getDueDate(),
-                    today
-            ) * 10;
-
+            fine =
+                    ChronoUnit.DAYS.between(
+                            issue.getDueDate(),
+                            today
+                    ) * 10.0;
         }
 
         return BorrowedBookDetailResponse.builder()
-
                 .issueId(issue.getId())
-
                 .title(issue.getBook().getTitle())
-
                 .author(issue.getBook().getAuthor())
-
                 .category(issue.getBook().getCategory())
-
                 .isbn(issue.getBook().getIsbn())
-
                 .publisher(issue.getBook().getPublisher())
-
-                .publicationYear(issue.getBook().getPublicationYear())
-
-                .totalCopies(issue.getBook().getTotalCopies())
-
-                .availableCopies(issue.getBook().getAvailableCopies())
-
-                .coverImage(issue.getBook().getCoverImage())
-
+                .publicationYear(
+                        issue.getBook().getPublicationYear()
+                )
+                .totalCopies(
+                        issue.getBook().getTotalCopies()
+                )
+                .availableCopies(
+                        issue.getBook().getAvailableCopies()
+                )
+                .coverImage(
+                        issue.getBook().getCoverImage()
+                )
                 .issueDate(issue.getIssueDate())
-
                 .dueDate(issue.getDueDate())
-
                 .returnDate(issue.getReturnDate())
-
                 .remainingDays(remainingDays)
-
                 .status(status)
-
                 .fine(fine)
-
                 .build();
-
     }
+
+
+    // =========================================================
+    // REPORTS
+    // =========================================================
+
     @Override
     public List<ReportResponse> getReport() {
 
-        return issueRecordRepository.findAll()
+        return issueRecordRepository
+                .findAllWithUserAndBook()
                 .stream()
                 .map(issue -> {
 
                     long lateDays = 0;
                     double fine = 0;
 
-                    if (issue.getReturnDate() != null &&
-                            issue.getReturnDate().isAfter(issue.getDueDate())) {
+                    if (issue.getReturnDate() != null
+                            && issue.getReturnDate()
+                            .isAfter(issue.getDueDate())) {
 
-                        lateDays = ChronoUnit.DAYS.between(
-                                issue.getDueDate(),
-                                issue.getReturnDate());
+                        lateDays =
+                                ChronoUnit.DAYS.between(
+                                        issue.getDueDate(),
+                                        issue.getReturnDate()
+                                );
 
-                        fine = lateDays * 10;
-
+                        fine = lateDays * 10.0;
                     }
 
                     return ReportResponse.builder()
-
                             .issueId(issue.getId())
-
                             .studentName(
                                     issue.getUser().getFirstName()
                                             + " "
-                                            + issue.getUser().getLastName())
-
-                            .bookTitle(issue.getBook().getTitle())
-
+                                            + issue.getUser().getLastName()
+                            )
+                            .bookTitle(
+                                    issue.getBook().getTitle()
+                            )
                             .issueDate(issue.getIssueDate())
-
                             .dueDate(issue.getDueDate())
-
                             .returnDate(issue.getReturnDate())
-
                             .returned(issue.getReturned())
-
                             .lateDays(lateDays)
-
                             .fineAmount(fine)
-
                             .build();
-
                 })
                 .toList();
-
     }
+
+
+    // =========================================================
+    // COMPLETE BORROW HISTORY
+    // =========================================================
+
     @Override
-    public List<BorrowedBookResponse> getBorrowHistory(Long userId) {
+    public List<BorrowedBookResponse>
+    getBorrowHistory(Long userId) {
 
         LocalDate today = LocalDate.now();
 
         return issueRecordRepository
-                .findByUserIdOrderByIssueDateDesc(userId)
+                .findBorrowHistory(userId)
                 .stream()
                 .map(issue -> {
 
@@ -445,78 +505,71 @@ public class DashboardServiceImpl implements DashboardService {
 
                     String status;
 
-                    if (Boolean.TRUE.equals(issue.getReturned())) {
+                    if (Boolean.TRUE.equals(
+                            issue.getReturned())) {
 
                         status = "RETURNED";
 
-                    }
-
-                    else if (remainingDays < 0) {
+                    } else if (remainingDays < 0) {
 
                         status = "OVERDUE";
 
-                    }
-
-                    else if (remainingDays <= 3) {
+                    } else if (remainingDays <= 3) {
 
                         status = "DUE SOON";
 
-                    }
-
-                    else {
+                    } else {
 
                         status = "ACTIVE";
-
                     }
 
                     return BorrowedBookResponse.builder()
-
                             .issueId(issue.getId())
-
                             .bookId(issue.getBook().getId())
-
                             .title(issue.getBook().getTitle())
-
                             .author(issue.getBook().getAuthor())
-
                             .category(issue.getBook().getCategory())
-
                             .issueDate(issue.getIssueDate())
-
                             .dueDate(issue.getDueDate())
-
                             .returnDate(issue.getReturnDate())
-
                             .returned(issue.getReturned())
-
-                            .remainingDays(Math.max(remainingDays, 0))
-
+                            .remainingDays(
+                                    Math.max(
+                                            remainingDays,
+                                            0
+                                    )
+                            )
                             .status(status)
-
                             .build();
-
                 })
-
                 .toList();
-
     }
+
+
+    // =========================================================
+    // FINE HISTORY
+    // =========================================================
+
     @Override
-    public List<FineHistoryResponse> getFineHistory(Long userId) {
+    public List<FineHistoryResponse>
+    getFineHistory(Long userId) {
 
         List<IssueRecord> issueRecords =
-                issueRecordRepository.findByUserIdOrderByIssueDateDesc(userId);
+                issueRecordRepository
+                        .findFineHistory(userId);
 
-        return issueRecords.stream()
-
+        return issueRecords
+                .stream()
                 .filter(issue -> {
 
-                    LocalDate returnDate = issue.getReturnDate();
+                    LocalDate returnDate =
+                            issue.getReturnDate();
 
-                    return returnDate != null &&
-                            returnDate.isAfter(issue.getDueDate());
-
+                    return returnDate != null
+                            && returnDate.isAfter(
+                            issue.getDueDate()
+                    );
                 })
-
                 .map(issue -> {
 
                     long lateDays =
@@ -525,33 +578,25 @@ public class DashboardServiceImpl implements DashboardService {
                                     issue.getReturnDate()
                             );
 
-                    double fineAmount = lateDays * 10.0;
+                    double fineAmount =
+                            lateDays * 10.0;
 
                     return FineHistoryResponse.builder()
-
                             .issueId(issue.getId())
-
-                            .bookTitle(issue.getBook().getTitle())
-
-                            .author(issue.getBook().getAuthor())
-
+                            .bookTitle(
+                                    issue.getBook().getTitle()
+                            )
+                            .author(
+                                    issue.getBook().getAuthor()
+                            )
                             .issueDate(issue.getIssueDate())
-
                             .dueDate(issue.getDueDate())
-
                             .returnDate(issue.getReturnDate())
-
                             .lateDays(lateDays)
-
                             .fineAmount(fineAmount)
-
                             .status("UNPAID")
-
                             .build();
-
                 })
-
                 .toList();
-
     }
 }

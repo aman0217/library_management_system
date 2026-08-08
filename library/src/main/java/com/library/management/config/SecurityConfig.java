@@ -92,20 +92,20 @@ public class SecurityConfig {
                                 .requestMatchers("/api/dashboard/borrowed-book/**")
                                 .hasRole("STUDENT")
 
-                                .requestMatchers(
-                                        "/api/borrow/history/**",
-                                        "/api/borrow/current/**"
-                                )
-                                .hasAnyRole(
-                                        "ADMIN",
-                                        "LIBRARIAN",
-                                        "STUDENT"
-                                )
-                                .requestMatchers("/api/borrow/**")
-                                .hasAnyRole(
-                                        "ADMIN",
-                                        "LIBRARIAN"
-                                )
+                        .requestMatchers(
+                                "/api/issues/student/**"
+                        )
+                        .hasAnyRole(
+                                "ADMIN",
+                                "LIBRARIAN",
+                                "STUDENT"
+                        )
+
+                        .requestMatchers("/api/issues/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "LIBRARIAN"
+                        )
 
 
                                 .requestMatchers("/api/dashboard/**")
