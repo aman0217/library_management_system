@@ -9,7 +9,7 @@ import PaidRoundedIcon from "@mui/icons-material/Paid";
 import { getUsers } from "../../services/userService";
 import { getAllBooks } from "../../services/bookService";
 import {
-    borrowBook,
+    issueBook,
     getBorrowHistory,
     returnBook
 } from "../../services/borrowService";
@@ -132,12 +132,10 @@ function Borrow() {
 
         try {
 
-            await borrowBook({
-
-                userId: selectedUser,
-                bookId: selectedBook
-
-            });
+            await issueBook({
+    userId: selectedUser,
+    bookId: selectedBook
+});
 
             toast.success("Book Borrowed Successfully");
 
