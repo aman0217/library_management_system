@@ -59,19 +59,23 @@ function Sidebar({ open, onClose }) {
     anchor="left"
     open={open}
     onClose={onClose}
-    PaperProps={{
-    sx:{
-        width:260,
+   PaperProps={{
+    sx: {
+        width: {
+            xs: "85vw",
+            sm: 280,
+            md: 260,
+        },
+        maxWidth: 320,
         height: "100vh",
-        overflow:"hidden",
-       
+        overflow: "hidden",
     }
 }}
 >
 
 <Box
      sx={{
-        width: 260,
+        width: "100%",
         height: "100%",
         background:
             "linear-gradient(180deg,#1565C0,#512DA8)",

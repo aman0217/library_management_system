@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
-import BookDetailsDialog from "../../components/student/BookDetailsDialog";
+
 import StudentDashboardLayout from "../../components/layout/StudentDashboardLayout";
-import {
+import BookDetailsDialog from "../../components/student/BookDetailsDialog";
 
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Grid
-
-} from "@mui/material";
 import {
     Box,
     Typography,
@@ -17,7 +10,6 @@ import {
     CardContent,
     CircularProgress,
     Avatar,
-    Chip,
     TextField,
     InputAdornment,
     Table,
@@ -27,59 +19,104 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Button
+    Button,
+    Chip
 } from "@mui/material";
-import {
 
-    Divider,
-    Stack
-
-} from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import SearchIcon from "@mui/icons-material/Search";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import {
-
     getBorrowedBooks,
     getBorrowedBookDetails
-
 } from "../../services/dashboardService";
+
 import { getCurrentUser } from "../../services/userService";
 
+
 function StudentMyBooks() {
+
+    // ==========================================
+    // STATES
+    // ==========================================
+
     const [loading, setLoading] = useState(true);
 
     const [books, setBooks] = useState([]);
 
-    const [filteredBooks, setFilteredBooks] = useState([]);
+    const [filteredBooks, setFilteredBooks] =
+        useState([]);
 
     const [search, setSearch] = useState("");
-    const [selectedBook, setSelectedBook] = useState(null);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedBook, setSelectedBook] =
+        useState(null);
+
+    const [dialogOpen, setDialogOpen] =
+        useState(false);
+
+
+    // ==========================================
+    // LOAD BOOKS
+    // ==========================================
+
     useEffect(() => {
 
         loadBooks();
 
     }, []);
 
+
     const loadBooks = async () => {
 
         try {
 
-            const user = await getCurrentUser();
+            const user =
+                await getCurrentUser();
 
-            const data = await getBorrowedBooks(user.id);
-            setBooks(data);
+            if (!user || !user.id) {
 
-            setFilteredBooks(data);
+                console.error(
+                    "Current user not found"
+                );
+
+                return;
+            }
+
+
+            const data =
+                await getBorrowedBooks(
+                    user.id
+                );
+
+
+            console.log(
+                "Borrowed Books =",
+                data
+            );
+
+
+            const booksData =
+                Array.isArray(data)
+                    ? data
+                    : [];
+
+
+            setBooks(booksData);
+
+            setFilteredBooks(
+                booksData
+            );
 
         }
 
         catch (error) {
 
-            console.error(error);
+            console.error(
+                "Error loading borrowed books:",
+                error
+            );
 
         }
 
@@ -90,43 +127,112 @@ function StudentMyBooks() {
         }
 
     };
+
+
+    // ==========================================
+    // VIEW BOOK DETAILS
+    // ==========================================
+
     const handleView = async (issueId) => {
 
-    try {
+        try {
 
-        const data = await getBorrowedBookDetails(issueId);
+            if (!issueId) {
 
-        setSelectedBook(data);
+                console.error(
+                    "Issue ID is missing"
+                );
 
-        setDialogOpen(true);
+                return;
+            }
 
-    }
 
-    catch (error) {
+            const data =
+                await getBorrowedBookDetails(
+                    issueId
+                );
 
-        console.error(error);
 
-    }
+            console.log(
+                "Borrowed Book Details =",
+                data
+            );
 
-};
+
+            setSelectedBook(data);
+
+            setDialogOpen(true);
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Error loading book details:",
+                error
+            );
+
+        }
+
+    };
+
+
+    // ==========================================
+    // SEARCH
+    // ==========================================
 
     const handleSearch = (value) => {
 
         setSearch(value);
 
+
+        const searchValue =
+            value.toLowerCase().trim();
+
+
+        if (searchValue === "") {
+
+            setFilteredBooks(
+                books
+            );
+
+            return;
+        }
+
+
+        const filtered =
+            books.filter((book) => {
+
+                const title =
+                    String(
+                        book.title || ""
+                    ).toLowerCase();
+
+
+                const author =
+                    String(
+                        book.author || ""
+                    ).toLowerCase();
+
+
+                return (
+                    title.includes(searchValue) ||
+                    author.includes(searchValue)
+                );
+
+            });
+
+
         setFilteredBooks(
-
-            books.filter(book =>
-
-                book.title.toLowerCase().includes(value.toLowerCase()) ||
-
-                book.author.toLowerCase().includes(value.toLowerCase())
-
-            )
-
+            filtered
         );
 
     };
+
+
+    // ==========================================
+    // STATUS COLOR
+    // ==========================================
 
     const getStatusColor = (status) => {
 
@@ -148,6 +254,11 @@ function StudentMyBooks() {
 
     };
 
+
+    // ==========================================
+    // LOADING UI
+    // ==========================================
+
     if (loading) {
 
         return (
@@ -155,9 +266,17 @@ function StudentMyBooks() {
             <StudentDashboardLayout>
 
                 <Box
-                    display="flex"
-                    justifyContent="center"
-                    mt={8}
+                    sx={{
+                        minHeight: "60vh",
+
+                        display: "flex",
+
+                        justifyContent:
+                            "center",
+
+                        alignItems:
+                            "center"
+                    }}
                 >
 
                     <CircularProgress />
@@ -170,270 +289,774 @@ function StudentMyBooks() {
 
     }
 
+
+    // ==========================================
+    // MAIN UI
+    // ==========================================
+
     return (
 
         <StudentDashboardLayout>
 
-            <Card
+            <Box
                 sx={{
-                    borderRadius: 5,
-                    mb: 4,
-                    background:
-                        "linear-gradient(135deg,#1976d2,#512DA8)",
-                    color: "white"
+                    width: "100%",
+                    maxWidth: "100%",
+                    overflow: "hidden"
                 }}
             >
 
-                <CardContent>
 
-                    <Box
+                {/* ==================================
+                    PAGE HEADER
+                ================================== */}
+
+                <Card
+                    sx={{
+                        mb: {
+                            xs: 3,
+                            md: 4
+                        },
+
+                        borderRadius: {
+                            xs: 3,
+                            md: 5
+                        },
+
+                        overflow: "hidden",
+
+                        background:
+                            "linear-gradient(135deg,#1976d2,#512DA8)",
+
+                        color: "#fff",
+
+                        boxShadow: {
+                            xs: 3,
+                            md: 6
+                        }
+                    }}
+                >
+
+                    <CardContent
                         sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center"
+                            px: {
+                                xs: 2.5,
+                                sm: 4,
+                                md: 5
+                            },
+
+                            py: {
+                                xs: 3,
+                                sm: 4,
+                                md: 4
+                            }
                         }}
                     >
 
-                        <Box>
-
-                            <Typography
-                                variant="h4"
-                                fontWeight="bold"
-                            >
-
-                                📚 My Borrowed Books
-
-                            </Typography>
-
-                            <Typography mt={1}>
-
-                                Manage all your currently borrowed books
-
-                            </Typography>
-
-                        </Box>
-
-                        <Avatar
+                        <Box
                             sx={{
-                                bgcolor: "white",
-                                color: "#1976d2",
-                                width: 70,
-                                height: 70,
-                                mr: 5
+                                display: "flex",
+
+                                flexDirection: {
+                                    xs: "column",
+                                    sm: "row"
+                                },
+
+                                justifyContent:
+                                    "space-between",
+
+                                alignItems: {
+                                    xs: "flex-start",
+                                    sm: "center"
+                                },
+
+                                gap: {
+                                    xs: 3,
+                                    sm: 2
+                                }
                             }}
                         >
 
-                            <MenuBookIcon fontSize="large"/>
 
-                        </Avatar>
+                            {/* LEFT */}
 
-                    </Box>
+                            <Box
+                                sx={{
+                                    minWidth: 0
+                                }}
+                            >
 
-                </CardContent>
+                                <Typography
+                                    variant="h4"
+                                    fontWeight="bold"
 
-            </Card>
+                                    sx={{
+                                        fontSize: {
+                                            xs: "1.6rem",
+                                            sm: "2rem",
+                                            md: "2.25rem"
+                                        },
 
-            <TextField
-
-                fullWidth
-
-                value={search}
-
-                onChange={(e) =>
-                    handleSearch(e.target.value)
-                }
-
-                placeholder="Search by Book Title or Author..."
-
-                sx={{ mb: 3 }}
-
-                InputProps={{
-
-                    startAdornment: (
-
-                        <InputAdornment position="start">
-
-                            <SearchIcon/>
-
-                        </InputAdornment>
-
-                    )
-
-                }}
-
-            />
-            <TableContainer
-                component={Paper}
-                sx={{
-                    borderRadius: 4
-                }}
-            >
-
-                <Table>
-
-                    <TableHead>
-
-                        <TableRow
-                           sx={{
-            bgcolor: "#1976d2"
-        }}
-    >
-                        
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                    }}><b>Book</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                    }}><b>Author</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                    }}><b>Category</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                    }}><b>Issue Date</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                    }}><b>Due Date</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                          textAlign: "center"
-                                    }}><b>Days Left</b></TableCell>
-
-                            <TableCell  sx={{
-                                        color: "#fff",
-                                          textAlign: "center"
-                                        
-                                    }}><b>Status</b></TableCell>
-
-                            <TableCell align="center"  sx={{
-                                        color: "#fff",
-                                    
-                                    }}><b>Action</b></TableCell>
-
-                        </TableRow>
-
-                    </TableHead>
-
-                    <TableBody>
-
-                        {
-
-                            filteredBooks.map(book => (
-
-                                <TableRow
-                                    hover
-                                    key={book.issueId}
+                                        lineHeight: 1.2
+                                    }}
                                 >
 
-                                    <TableCell>
+                                    📚 My Borrowed Books
 
-                                        {book.title}
+                                </Typography>
 
-                                    </TableCell>
 
-                                    <TableCell>
+                                <Typography
+                                    sx={{
+                                        mt: 1,
 
-                                        {book.author}
+                                        fontSize: {
+                                            xs: "0.9rem",
+                                            sm: "1rem"
+                                        },
 
-                                    </TableCell>
+                                        opacity: 0.9
+                                    }}
+                                >
 
-                                    <TableCell>
+                                    Manage all your
+                                    currently borrowed
+                                    books
 
-                                        {book.category}
+                                </Typography>
 
-                                    </TableCell>
+                            </Box>
 
-                                    <TableCell>
 
-                                        {book.issueDate}
+                            {/* RIGHT ICON */}
 
-                                    </TableCell>
+                            <Avatar
+                                sx={{
+                                    bgcolor: "#fff",
 
-                                    <TableCell>
+                                    color: "#1976d2",
 
-                                        {book.dueDate}
+                                    width: {
+                                        xs: 60,
+                                        sm: 70,
+                                        md: 80
+                                    },
 
-                                    </TableCell>
+                                    height: {
+                                        xs: 60,
+                                        sm: 70,
+                                        md: 80
+                                    },
 
-                                    <TableCell>
-                                        <Box
-        sx={{
-            display: "flex",
-            justifyContent: "center"
-        }}
-    >
+                                    flexShrink: 0
+                                }}
+                            >
 
-                                        {book.remainingDays}
-</Box>
-                                    </TableCell>
+                                <MenuBookIcon
+                                    sx={{
+                                        fontSize: {
+                                            xs: 32,
+                                            sm: 38,
+                                            md: 44
+                                        }
+                                    }}
+                                />
 
-                         <TableCell>
+                            </Avatar>
 
-    <Box
-        sx={{
-            display: "flex",
-            justifyContent: "center"
-        }}
-    >
+                        </Box>
 
-        <Chip
-            label={book.status}
-            color={getStatusColor(book.status)}
-            sx={{
-                minWidth: 110,
-                fontWeight: "bold"
-            }}
-        />
+                    </CardContent>
 
-    </Box>
+                </Card>
 
-</TableCell>
-                                    <TableCell align="center">
 
-                                        <Button
 
-    size="small"
+                {/* ==================================
+                    SEARCH
+                ================================== */}
 
-    variant="contained"
+                <TextField
+                    fullWidth
 
-    startIcon={<VisibilityIcon/>}
+                    value={search}
 
-    onClick={() => handleView(book.issueId)}
+                    onChange={(e) =>
+                        handleSearch(
+                            e.target.value
+                        )
+                    }
 
->
+                    placeholder={
+                        "Search by Book Title or Author..."
+                    }
 
-    View
+                    InputProps={{
+                        startAdornment: (
 
-</Button>
+                            <InputAdornment
+                                position="start"
+                            >
+
+                                <SearchIcon />
+
+                            </InputAdornment>
+
+                        )
+                    }}
+
+                    sx={{
+                        mb: {
+                            xs: 2.5,
+                            md: 3
+                        },
+
+                        "& .MuiOutlinedInput-root":
+                        {
+                            borderRadius: {
+                                xs: 2.5,
+                                md: 3
+                            },
+
+                            minHeight: {
+                                xs: 52,
+                                md: 56
+                            }
+                        }
+                    }}
+                />
+
+
+
+                {/* ==================================
+                    RESULT COUNT
+                ================================== */}
+
+                <Box
+                    sx={{
+                        mb: 2,
+
+                        display: "flex",
+
+                        justifyContent:
+                            "space-between",
+
+                        alignItems: "center",
+
+                        flexWrap: "wrap",
+
+                        gap: 1
+                    }}
+                >
+
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                    >
+
+                        {filteredBooks.length}{" "}
+                        {filteredBooks.length === 1
+                            ? "book"
+                            : "books"}{" "}
+                        found
+
+                    </Typography>
+
+
+                    {search.trim() !== "" && (
+
+                        <Button
+                            size="small"
+
+                            onClick={() =>
+                                handleSearch("")
+                            }
+
+                            sx={{
+                                textTransform:
+                                    "none",
+
+                                fontWeight:
+                                    "bold"
+                            }}
+                        >
+
+                            Clear Search
+
+                        </Button>
+
+                    )}
+
+                </Box>
+
+
+
+                {/* ==================================
+                    TABLE
+                ================================== */}
+
+                <TableContainer
+                    component={Paper}
+
+                    sx={{
+                        width: "100%",
+
+                        maxWidth: "100%",
+
+                        borderRadius: {
+                            xs: 2,
+                            md: 4
+                        },
+
+                        overflowX: "auto",
+
+                        WebkitOverflowScrolling:
+                            "touch",
+
+                        boxShadow: {
+                            xs: 2,
+                            md: 4
+                        }
+                    }}
+                >
+
+                    <Table
+                        sx={{
+                            minWidth: 950
+                        }}
+                    >
+
+
+                        {/* TABLE HEADER */}
+
+                        <TableHead>
+
+                            <TableRow
+                                sx={{
+                                    bgcolor:
+                                        "#1976d2"
+                                }}
+                            >
+
+                                <TableCell
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Book
+                                </TableCell>
+
+
+                                <TableCell
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Author
+                                </TableCell>
+
+
+                                <TableCell
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Category
+                                </TableCell>
+
+
+                                <TableCell
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Issue Date
+                                </TableCell>
+
+
+                                <TableCell
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Due Date
+                                </TableCell>
+
+
+                                <TableCell
+                                    align="center"
+
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Days Left
+                                </TableCell>
+
+
+                                <TableCell
+                                    align="center"
+
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Status
+                                </TableCell>
+
+
+                                <TableCell
+                                    align="center"
+
+                                    sx={{
+                                        color: "#fff",
+                                        fontWeight:
+                                            "bold",
+                                        whiteSpace:
+                                            "nowrap"
+                                    }}
+                                >
+                                    Action
+                                </TableCell>
+
+                            </TableRow>
+
+                        </TableHead>
+
+
+
+                        {/* TABLE BODY */}
+
+                        <TableBody>
+
+
+                            {filteredBooks.length === 0 ? (
+
+                                <TableRow>
+
+                                    <TableCell
+                                        colSpan={8}
+
+                                        align="center"
+
+                                        sx={{
+                                            py: 6
+                                        }}
+                                    >
+
+                                        <MenuBookIcon
+                                            sx={{
+                                                fontSize: 50,
+                                                color:
+                                                    "text.disabled",
+                                                mb: 1
+                                            }}
+                                        />
+
+
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color="text.secondary"
+                                        >
+
+                                            {search.trim()
+                                                ? "No Books Found"
+                                                : "No Borrowed Books"}
+
+                                        </Typography>
+
+
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                mt: 0.5
+                                            }}
+                                        >
+
+                                            {search.trim()
+                                                ? "Try another book title or author."
+                                                : "You currently have no borrowed books."}
+
+                                        </Typography>
 
                                     </TableCell>
 
                                 </TableRow>
 
-                            ))
+                            ) : (
 
-                        }
+                                filteredBooks.map(
+                                    (book) => (
 
-                    </TableBody>
+                                        <TableRow
+                                            hover
 
-                </Table>
+                                            key={
+                                                book.issueId
+                                            }
+                                        >
 
-            </TableContainer>
-        <BookDetailsDialog
-    open={dialogOpen}
-    onClose={() => setDialogOpen(false)}
-    book={selectedBook}
-/>
- </StudentDashboardLayout>
+
+                                            {/* BOOK */}
+
+                                            <TableCell
+                                                sx={{
+                                                    fontWeight:
+                                                        600,
+
+                                                    whiteSpace:
+                                                        "nowrap"
+                                                }}
+                                            >
+
+                                                {book.title ||
+                                                    "-"}
+
+                                            </TableCell>
+
+
+                                            {/* AUTHOR */}
+
+                                            <TableCell
+                                                sx={{
+                                                    whiteSpace:
+                                                        "nowrap"
+                                                }}
+                                            >
+
+                                                {book.author ||
+                                                    "-"}
+
+                                            </TableCell>
+
+
+                                            {/* CATEGORY */}
+
+                                            <TableCell
+                                                sx={{
+                                                    whiteSpace:
+                                                        "nowrap"
+                                                }}
+                                            >
+
+                                                {book.category ||
+                                                    "-"}
+
+                                            </TableCell>
+
+
+                                            {/* ISSUE DATE */}
+
+                                            <TableCell
+                                                sx={{
+                                                    whiteSpace:
+                                                        "nowrap"
+                                                }}
+                                            >
+
+                                                {book.issueDate ||
+                                                    "-"}
+
+                                            </TableCell>
+
+
+                                            {/* DUE DATE */}
+
+                                            <TableCell
+                                                sx={{
+                                                    whiteSpace:
+                                                        "nowrap"
+                                                }}
+                                            >
+
+                                                {book.dueDate ||
+                                                    "-"}
+
+                                            </TableCell>
+
+
+                                            {/* DAYS LEFT */}
+
+                                            <TableCell
+                                                align="center"
+                                            >
+
+                                                <Typography
+                                                    fontWeight="bold"
+
+                                                    sx={{
+                                                        color:
+                                                            book.remainingDays <= 1
+                                                                ? "error.main"
+                                                                : book.remainingDays <= 3
+                                                                    ? "warning.main"
+                                                                    : "success.main"
+                                                    }}
+                                                >
+
+                                                    {book.remainingDays ??
+                                                        "-"}
+
+                                                </Typography>
+
+                                            </TableCell>
+
+
+                                            {/* STATUS */}
+
+                                            <TableCell
+                                                align="center"
+                                            >
+
+                                                <Box
+                                                    sx={{
+                                                        display:
+                                                            "flex",
+
+                                                        justifyContent:
+                                                            "center"
+                                                    }}
+                                                >
+
+                                                    <Chip
+                                                        label={
+                                                            book.status ||
+                                                            "UNKNOWN"
+                                                        }
+
+                                                        color={
+                                                            getStatusColor(
+                                                                book.status
+                                                            )
+                                                        }
+
+                                                        sx={{
+                                                            minWidth: 110,
+
+                                                            fontWeight:
+                                                                "bold",
+
+                                                            "& .MuiChip-label":
+                                                            {
+                                                                px: 1.5
+                                                            }
+                                                        }}
+                                                    />
+
+                                                </Box>
+
+                                            </TableCell>
+
+
+                                            {/* ACTION */}
+
+                                            <TableCell
+                                                align="center"
+                                            >
+
+                                                <Button
+                                                    size="small"
+
+                                                    variant="contained"
+
+                                                    startIcon={
+                                                        <VisibilityIcon />
+                                                    }
+
+                                                    onClick={() =>
+                                                        handleView(
+                                                            book.issueId
+                                                        )
+                                                    }
+
+                                                    sx={{
+                                                        borderRadius:
+                                                            2,
+
+                                                        textTransform:
+                                                            "none",
+
+                                                        fontWeight:
+                                                            "bold",
+
+                                                        whiteSpace:
+                                                            "nowrap"
+                                                    }}
+                                                >
+
+                                                    View
+
+                                                </Button>
+
+                                            </TableCell>
+
+
+                                        </TableRow>
+
+                                    )
+                                )
+
+                            )}
+
+                        </TableBody>
+
+                    </Table>
+
+                </TableContainer>
+
+
+
+                {/* ==================================
+                    BOOK DETAILS DIALOG
+                ================================== */}
+
+                <BookDetailsDialog
+                    open={dialogOpen}
+
+                    onClose={() =>
+                        setDialogOpen(false)
+                    }
+
+                    book={selectedBook}
+                />
+
+            </Box>
+
+        </StudentDashboardLayout>
 
     );
 
 }
+
 
 export default StudentMyBooks;

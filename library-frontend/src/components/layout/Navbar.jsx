@@ -31,19 +31,14 @@ import {
 function Navbar({ onMenuClick }) {
 
     const [currentUser, setCurrentUser] = useState(null);
-
     const [anchorEl, setAnchorEl] = useState(null);
-
     const [notifications, setNotifications] = useState([]);
-
     const [unreadCount, setUnreadCount] = useState(0);
 
     const open = Boolean(anchorEl);
 
     useEffect(() => {
-
         loadCurrentUser();
-
     }, []);
 
     useEffect(() => {
@@ -52,7 +47,10 @@ function Navbar({ onMenuClick }) {
 
         loadNotifications();
 
-        const interval = setInterval(loadNotifications, 5000);
+        const interval = setInterval(
+            loadNotifications,
+            30000
+        );
 
         return () => clearInterval(interval);
 
@@ -66,9 +64,7 @@ function Navbar({ onMenuClick }) {
 
             setCurrentUser(user);
 
-        }
-
-        catch (err) {
+        } catch (err) {
 
             console.error(err);
 
@@ -87,12 +83,9 @@ function Navbar({ onMenuClick }) {
             const unread = await getUnreadCount(currentUser.id);
 
             setNotifications(data);
-
             setUnreadCount(unread);
 
-        }
-
-        catch (err) {
+        } catch (err) {
 
             console.error(err);
 
@@ -103,56 +96,74 @@ function Navbar({ onMenuClick }) {
     return (
 
         <AppBar
-
             position="fixed"
-
             elevation={3}
-
             sx={{
-
                 background:
                     "linear-gradient(135deg,#1976D2,#512DA8)"
-
             }}
-
         >
 
-            <Toolbar>
+            <Toolbar
+                sx={{
+                    minHeight: {
+                        xs: 60,
+                        sm: 64
+                    },
+
+                    px: {
+                        xs: 1,
+                        sm: 2,
+                        md: 3
+                    }
+                }}
+            >
+
+                {/* MENU BUTTON */}
 
                 <IconButton
-
                     color="inherit"
-
                     edge="start"
-
                     onClick={onMenuClick}
-
                     sx={{
+                        mr: {
+                            xs: 1,
+                            sm: 2
+                        },
 
-                        mr:2,
-
-                        "&:hover":{
-
-                            bgcolor:"rgba(255,255,255,.25)"
-
+                        "&:hover": {
+                            bgcolor: "rgba(255,255,255,.25)"
                         }
-
                     }}
-
                 >
 
-                    <MenuIcon/>
+                    <MenuIcon />
 
                 </IconButton>
 
-                <Box sx={{flexGrow:1}}>
+
+                {/* TITLE */}
+
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        minWidth: 0
+                    }}
+                >
 
                     <Typography
-
-                        variant="h5"
-
                         fontWeight="bold"
+                        sx={{
+                            fontSize: {
+                                xs: "1rem",
+                                sm: "1.25rem",
+                                md: "1.5rem"
+                            },
 
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                        }}
                     >
 
                         📚 Library Management System
@@ -160,11 +171,15 @@ function Navbar({ onMenuClick }) {
                     </Typography>
 
                     <Typography
-
                         variant="body2"
+                        sx={{
+                            opacity: .8,
 
-                        sx={{opacity:.8}}
-
+                            display: {
+                                xs: "none",
+                                sm: "block"
+                            }
+                        }}
                     >
 
                         Administration Panel
@@ -173,66 +188,96 @@ function Navbar({ onMenuClick }) {
 
                 </Box>
 
+
+                {/* NOTIFICATION */}
+
                 <IconButton
-
                     color="inherit"
-
-                    onClick={(e)=>setAnchorEl(e.currentTarget)}
-
+                    onClick={(e) =>
+                        setAnchorEl(e.currentTarget)
+                    }
+                    sx={{
+                        ml: {
+                            xs: .5,
+                            sm: 1
+                        }
+                    }}
                 >
 
                     <Badge
-
                         badgeContent={unreadCount}
-
                         color="error"
-
+                        max={99}
                     >
 
-                        <NotificationsIcon/>
+                        <NotificationsIcon />
 
                     </Badge>
 
                 </IconButton>
 
+
+                {/* USER INFO */}
+
                 <Box
-
                     sx={{
+                        display: "flex",
+                        alignItems: "center",
 
-                        display:"flex",
+                        ml: {
+                            xs: 1,
+                            sm: 2,
+                            md: 3
+                        },
 
-                        alignItems:"center",
-
-                        ml:3,
-
-                        gap:1.5
-
+                        gap: {
+                            xs: .5,
+                            sm: 1.5
+                        }
                     }}
-
                 >
 
                     <Avatar
-
                         sx={{
+                            bgcolor: "#fff",
+                            color: "#1976D2",
 
-                            bgcolor:"#fff",
+                            width: {
+                                xs: 34,
+                                sm: 40
+                            },
 
-                            color:"#1976D2"
-
+                            height: {
+                                xs: 34,
+                                sm: 40
+                            }
                         }}
-
                     >
 
-                        <AdminPanelSettingsIcon/>
+                        <AdminPanelSettingsIcon
+                            sx={{
+                                fontSize: {
+                                    xs: 20,
+                                    sm: 24
+                                }
+                            }}
+                        />
 
                     </Avatar>
 
-                    <Box>
+
+                    <Box
+                        sx={{
+                            display: {
+                                xs: "none",
+                                sm: "block"
+                            }
+                        }}
+                    >
 
                         <Typography
-
                             fontWeight="bold"
-
+                            noWrap
                         >
 
                             {currentUser?.firstName}
@@ -240,161 +285,171 @@ function Navbar({ onMenuClick }) {
                         </Typography>
 
                         <Chip
-
                             label="ADMIN"
-
                             color="warning"
-
                             size="small"
-
                         />
 
                     </Box>
 
                 </Box>
 
+
+                {/* NOTIFICATION MENU */}
+
                 <Menu
-
                     anchorEl={anchorEl}
-
                     open={open}
-
-                    onClose={()=>setAnchorEl(null)}
+                    onClose={() => setAnchorEl(null)}
 
                     slotProps={{
-                        paper:{
-                            sx:{
-                                width:380,
-                                maxHeight:500,
-                                borderRadius:3
+                        paper: {
+                            sx: {
+                                width: {
+                                    xs: "calc(100vw - 20px)",
+                                    sm: 380
+                                },
+
+                                maxWidth: "380px",
+
+                                maxHeight: {
+                                    xs: "70vh",
+                                    sm: 500
+                                },
+
+                                borderRadius: 3
                             }
                         }
                     }}
-
                 >
 
                     <Typography
-
                         sx={{
-
-                            p:2,
-
-                            fontWeight:"bold"
-
+                            p: 2,
+                            fontWeight: "bold"
                         }}
-
                     >
 
                         Notifications
 
                     </Typography>
 
-                    <Divider/>
+                    <Divider />
 
-                    {
 
-                        notifications.length===0 ?
+                    {notifications.length === 0 ? (
 
-                        (
+                        <MenuItem>
 
-                            <MenuItem>
+                            No Notifications
 
-                                No Notifications
+                        </MenuItem>
 
-                            </MenuItem>
+                    ) : (
 
-                        )
-
-                        :
-
-                        notifications.map(notification=>(
+                        notifications.map(notification => (
 
                             <MenuItem
-
                                 key={notification.id}
 
                                 sx={{
+                                    display: "block",
 
-                                    display:"block",
-
-                                    whiteSpace:"normal",
+                                    whiteSpace: "normal",
 
                                     bgcolor:
-
                                         notification.read
+                                            ? "inherit"
+                                            : "#f5f5f5",
 
-                                            ?"inherit"
-
-                                            :"#f5f5f5"
-
+                                    py: 1.5
                                 }}
 
-                                onClick={()=>{
+                                onClick={() => {
 
-                                    if(!notification.read){
+                                    if (!notification.read) {
 
-                                        markAsRead(notification.id);
+                                        markAsRead(
+                                            notification.id
+                                        );
 
                                         loadNotifications();
 
                                     }
 
                                 }}
-
                             >
 
                                 <Box
-
                                     sx={{
-
-                                        display:"flex",
-
-                                        justifyContent:"space-between"
-
+                                        display: "flex",
+                                        justifyContent:
+                                            "space-between",
+                                        alignItems: "center",
+                                        gap: 1
                                     }}
-
                                 >
 
-                                    <Typography fontWeight="bold">
+                                    <Typography
+                                        fontWeight="bold"
+                                        sx={{
+                                            minWidth: 0,
+                                            overflow: "hidden",
+                                            textOverflow:
+                                                "ellipsis"
+                                        }}
+                                    >
 
                                         {notification.title}
 
                                     </Typography>
 
+
                                     <IconButton
-
                                         size="small"
-
                                         color="error"
 
-                                        onClick={(e)=>{
+                                        onClick={(e) => {
 
                                             e.stopPropagation();
 
-                                            deleteNotification(notification.id);
+                                            deleteNotification(
+                                                notification.id
+                                            );
 
                                             loadNotifications();
 
                                         }}
-
                                     >
 
-                                        <DeleteIcon fontSize="small"/>
+                                        <DeleteIcon
+                                            fontSize="small"
+                                        />
 
                                     </IconButton>
 
                                 </Box>
 
-                                <Typography variant="body2">
+
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        whiteSpace: "normal",
+                                        wordBreak: "break-word"
+                                    }}
+                                >
 
                                     {notification.message}
 
                                 </Typography>
 
+
                                 <Typography
-
                                     variant="caption"
-
+                                    sx={{
+                                        display: "block",
+                                        mt: .5
+                                    }}
                                 >
 
                                     {notification.createdAt}
@@ -405,7 +460,7 @@ function Navbar({ onMenuClick }) {
 
                         ))
 
-                    }
+                    )}
 
                 </Menu>
 
@@ -414,7 +469,6 @@ function Navbar({ onMenuClick }) {
         </AppBar>
 
     );
-
 }
 
 export default Navbar;

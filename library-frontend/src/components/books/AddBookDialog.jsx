@@ -24,31 +24,19 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 function AddBookDialog({
-
     open,
-
     handleClose,
-
     loadBooks
-
 }) {
 
     const [book, setBook] = useState({
-
         title: "",
-
         author: "",
-
         isbn: "",
-
         publisher: "",
-
         publicationYear: "",
-
         category: "",
-
         totalCopies: ""
-
     });
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -56,39 +44,32 @@ function AddBookDialog({
     const handleChange = (e) => {
 
         setBook({
-
             ...book,
-
             [e.target.name]: e.target.value
-
         });
 
     };
 
     const handleFileChange = (e) => {
 
-        setSelectedFile(e.target.files[0]);
+        const file = e.target.files?.[0];
+
+        if (file) {
+            setSelectedFile(file);
+        }
 
     };
 
     const resetForm = () => {
 
         setBook({
-
             title: "",
-
             author: "",
-
             isbn: "",
-
             publisher: "",
-
             publicationYear: "",
-
             category: "",
-
             totalCopies: ""
-
         });
 
         setSelectedFile(null);
@@ -104,11 +85,8 @@ function AddBookDialog({
             if (selectedFile) {
 
                 await uploadBookCover(
-
                     savedBook.id,
-
                     selectedFile
-
                 );
 
             }
@@ -121,19 +99,21 @@ function AddBookDialog({
 
             handleClose();
 
-        }
-
-        catch (error) {
+        } catch (error) {
 
             toast.error(
-
                 error.response?.data?.message ||
-
                 "Unable to Add Book"
-
             );
 
         }
+
+    };
+
+    const handleDialogClose = () => {
+
+        resetForm();
+        handleClose();
 
     };
 
@@ -141,33 +121,75 @@ function AddBookDialog({
 
         <Dialog
             open={open}
-            onClose={handleClose}
+            onClose={handleDialogClose}
             maxWidth="md"
             fullWidth
+            fullScreen={false}
             PaperProps={{
                 sx: {
-                    borderRadius: 5
+                    borderRadius: {
+                        xs: 0,
+                        sm: 3,
+                        md: 5
+                    },
+                    width: "100%",
+                    maxHeight: {
+                        xs: "100vh",
+                        sm: "90vh"
+                    },
+                    m: {
+                        xs: 0,
+                        sm: 2
+                    }
                 }
             }}
         >
+
+            {/* ================= HEADER ================= */}
 
             <DialogTitle
                 sx={{
                     background:
                         "linear-gradient(135deg,#1976D2,#512DA8)",
+
                     color: "#fff",
+
                     display: "flex",
+
                     alignItems: "center",
+
                     gap: 1,
-                    py: 2
+
+                    py: {
+                        xs: 1.5,
+                        sm: 2
+                    },
+
+                    px: {
+                        xs: 2,
+                        sm: 3
+                    }
                 }}
             >
 
-                <MenuBookIcon />
+                <MenuBookIcon
+                    sx={{
+                        fontSize: {
+                            xs: 22,
+                            sm: 28
+                        }
+                    }}
+                />
 
                 <Typography
                     variant="h5"
                     fontWeight="bold"
+                    sx={{
+                        fontSize: {
+                            xs: "1.15rem",
+                            sm: "1.5rem"
+                        }
+                    }}
                 >
 
                     Add New Book
@@ -176,16 +198,39 @@ function AddBookDialog({
 
             </DialogTitle>
 
+
+            {/* ================= CONTENT ================= */}
+
             <DialogContent
                 sx={{
-                    mt: 3
+                    mt: {
+                        xs: 1,
+                        sm: 2
+                    },
+
+                    px: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    py: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    overflowY: "auto"
                 }}
             >
 
                 <Grid
                     container
-                    spacing={3}
+                    spacing={{
+                        xs: 2,
+                        sm: 3
+                    }}
                 >
+
+                    {/* BOOK TITLE */}
 
                     <Grid size={{ xs: 12, md: 6 }}>
 
@@ -199,6 +244,9 @@ function AddBookDialog({
 
                     </Grid>
 
+
+                    {/* AUTHOR */}
+
                     <Grid size={{ xs: 12, md: 6 }}>
 
                         <TextField
@@ -210,6 +258,9 @@ function AddBookDialog({
                         />
 
                     </Grid>
+
+
+                    {/* ISBN */}
 
                     <Grid size={{ xs: 12, md: 6 }}>
 
@@ -223,6 +274,9 @@ function AddBookDialog({
 
                     </Grid>
 
+
+                    {/* PUBLISHER */}
+
                     <Grid size={{ xs: 12, md: 6 }}>
 
                         <TextField
@@ -234,6 +288,9 @@ function AddBookDialog({
                         />
 
                     </Grid>
+
+
+                    {/* PUBLICATION YEAR */}
 
                     <Grid size={{ xs: 12, md: 6 }}>
 
@@ -247,6 +304,9 @@ function AddBookDialog({
 
                     </Grid>
 
+
+                    {/* CATEGORY */}
+
                     <Grid size={{ xs: 12, md: 6 }}>
 
                         <TextField
@@ -258,6 +318,9 @@ function AddBookDialog({
                         />
 
                     </Grid>
+
+
+                    {/* TOTAL COPIES */}
 
                     <Grid size={{ xs: 12 }}>
 
@@ -271,60 +334,63 @@ function AddBookDialog({
 
                     </Grid>
 
+
+                    {/* ================= FILE UPLOAD ================= */}
+
                     <Grid size={{ xs: 12 }}>
 
                         <Box
-
                             sx={{
-
                                 border: "2px dashed #1976D2",
 
-                                borderRadius: 4,
+                                borderRadius: {
+                                    xs: 2,
+                                    sm: 4
+                                },
 
-                                p: 3,
+                                p: {
+                                    xs: 2,
+                                    sm: 3
+                                },
 
                                 textAlign: "center",
 
-                                bgcolor: "#F8FAFF"
+                                bgcolor: "#F8FAFF",
 
+                                width: "100%"
                             }}
-
                         >
 
                             <Button
-
                                 component="label"
-
                                 variant="contained"
-
                                 startIcon={<UploadFileIcon />}
+                                sx={{
+                                    width: {
+                                        xs: "100%",
+                                        sm: "auto"
+                                    },
 
+                                    minHeight: 44
+                                }}
                             >
 
                                 Upload Book Cover
 
                                 <input
-
                                     hidden
-
                                     type="file"
-
                                     accept="image/*"
-
                                     onChange={handleFileChange}
-
                                 />
 
                             </Button>
 
+
                             <Typography
-
                                 variant="body2"
-
                                 color="text.secondary"
-
-                                mt={2}
-
+                                mt={1.5}
                             >
 
                                 JPG, PNG Supported
@@ -335,84 +401,106 @@ function AddBookDialog({
 
                     </Grid>
 
-                    {
 
-                        selectedFile && (
+                    {/* ================= SELECTED FILE ================= */}
 
-                            <Grid size={{ xs: 12 }}>
+                    {selectedFile && (
 
-                                <Chip
+                        <Grid size={{ xs: 12 }}>
 
-                                    color="primary"
+                            <Chip
+                                color="primary"
+                                label={selectedFile.name}
+                                sx={{
+                                    fontWeight: "bold",
 
-                                    label={selectedFile.name}
+                                    maxWidth: "100%",
 
-                                    sx={{
+                                    "& .MuiChip-label": {
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap"
+                                    }
+                                }}
+                            />
 
-                                        fontWeight: "bold",
+                        </Grid>
 
-                                        px: 1
-
-                                    }}
-
-                                />
-
-                            </Grid>
-
-                        )
-
-                    }
+                    )}
 
                 </Grid>
 
             </DialogContent>
 
+
+            {/* ================= ACTIONS ================= */}
+
             <DialogActions
                 sx={{
-                    px: 3,
-                    pb: 3
+                    px: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    pb: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    pt: 1,
+
+                    gap: 1,
+
+                    flexDirection: {
+                        xs: "column-reverse",
+                        sm: "row"
+                    },
+
+                    alignItems: "stretch"
                 }}
             >
 
                 <Button
-
                     variant="outlined"
-
                     color="inherit"
-
-                    onClick={handleClose}
-
+                    onClick={handleDialogClose}
                     sx={{
-
                         borderRadius: 3,
 
-                        px: 3
+                        px: 3,
 
+                        minHeight: 44,
+
+                        width: {
+                            xs: "100%",
+                            sm: "auto"
+                        }
                     }}
-
                 >
 
                     Cancel
 
                 </Button>
 
+
                 <Button
-
                     variant="contained"
-
                     onClick={handleSave}
-
                     sx={{
-
                         borderRadius: 3,
 
                         px: 4,
 
+                        minHeight: 44,
+
+                        width: {
+                            xs: "100%",
+                            sm: "auto"
+                        },
+
                         background:
                             "linear-gradient(135deg,#1976D2,#512DA8)"
-
                     }}
-
                 >
 
                     Save Book

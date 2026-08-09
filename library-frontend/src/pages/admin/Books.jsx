@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+
 import {
     Card,
     CardContent,
     Avatar,
     Stack,
-    Chip,
     InputAdornment,
     Box,
     Button,
@@ -12,8 +12,9 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { getDashboardSummary } from "../../services/dashboardService";
+
 import Grid from "@mui/material/Grid";
+
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import SearchIcon from "@mui/icons-material/Search";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -33,17 +34,25 @@ import {
     deleteBook
 } from "../../services/bookService";
 
+import {
+    getDashboardSummary
+} from "../../services/dashboardService";
+
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import AddBookDialog from "../../components/books/AddBookDialog";
 import EditBookDialog from "../../components/books/EditBookDialog";
 
 import { DataGrid } from "@mui/x-data-grid";
 
+
 function Books() {
 
     const [rows, setRows] = useState([]);
+
     const [rowCount, setRowCount] = useState(0);
+
     const [summary, setSummary] = useState(null);
+
     const [keyword, setKeyword] = useState("");
 
     const [selectedBook, setSelectedBook] = useState(null);
@@ -57,23 +66,29 @@ function Books() {
         pageSize: 10
     });
 
+
+    /*
+    ============================================================
+                         LOAD DATA
+    ============================================================
+    */
+
     useEffect(() => {
 
         loadBooks();
+
         loadSummary();
 
     }, [paginationModel]);
+
 
     const loadBooks = async () => {
 
         try {
 
             const data = await getBooks(
-
                 paginationModel.page,
-
                 paginationModel.pageSize
-
             );
 
             setRows(data.content);
@@ -89,6 +104,32 @@ function Books() {
         }
 
     };
+
+
+    const loadSummary = async () => {
+
+        try {
+
+            const data = await getDashboardSummary();
+
+            setSummary(data);
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+        }
+
+    };
+
+
+    /*
+    ============================================================
+                           SEARCH
+    ============================================================
+    */
 
     const handleSearch = async (value) => {
 
@@ -120,12 +161,17 @@ function Books() {
 
     };
 
+
+    /*
+    ============================================================
+                           DELETE
+    ============================================================
+    */
+
     const handleDelete = async (id) => {
 
         const confirmDelete = window.confirm(
-
             "Are you sure you want to delete this book?"
-
         );
 
         if (!confirmDelete) return;
@@ -138,38 +184,28 @@ function Books() {
 
             loadBooks();
 
+            loadSummary();
+
         }
 
         catch (error) {
 
             toast.error(
-
                 error.response?.data?.message ||
-
                 "Unable to Delete Book"
-
             );
 
         }
 
     };
-const loadSummary = async () => {
 
-    try {
 
-        const data = await getDashboardSummary();
+    /*
+    ============================================================
+                           COLUMNS
+    ============================================================
+    */
 
-        setSummary(data);
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-    }
-
-};
     const columns = [
 
         {
@@ -181,13 +217,15 @@ const loadSummary = async () => {
         {
             field: "title",
             headerName: "Title",
-            flex: 1
+            flex: 1,
+            minWidth: 180
         },
 
         {
             field: "author",
             headerName: "Author",
-            flex: 1
+            flex: 1,
+            minWidth: 160
         },
 
         {
@@ -217,7 +255,8 @@ const loadSummary = async () => {
         {
             field: "publisher",
             headerName: "Publisher",
-            flex: 1
+            flex: 1,
+            minWidth: 160
         },
 
         {
@@ -225,9 +264,19 @@ const loadSummary = async () => {
             headerName: "Actions",
             width: 150,
 
+            sortable: false,
+
+            filterable: false,
+
             renderCell: (params) => (
 
-                <>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5
+                    }}
+                >
 
                     <IconButton
                         color="primary"
@@ -238,22 +287,47 @@ const loadSummary = async () => {
                             setEditDialogOpen(true);
 
                         }}
+                        sx={{
+                            transition: ".25s",
+
+                            "&:hover": {
+
+                                bgcolor: "#E3F2FD",
+
+                                transform: "scale(1.12)"
+
+                            }
+                        }}
                     >
 
                         <EditIcon />
 
                     </IconButton>
 
+
                     <IconButton
                         color="error"
-                        onClick={() => handleDelete(params.row.id)}
+                        onClick={() =>
+                            handleDelete(params.row.id)
+                        }
+                        sx={{
+                            transition: ".25s",
+
+                            "&:hover": {
+
+                                bgcolor: "#FFEBEE",
+
+                                transform: "scale(1.12)"
+
+                            }
+                        }}
                     >
 
                         <DeleteIcon />
 
                     </IconButton>
 
-                </>
+                </Box>
 
             )
 
@@ -261,667 +335,1149 @@ const loadSummary = async () => {
 
     ];
 
+
+    /*
+    ============================================================
+                         CATEGORY COUNT
+    ============================================================
+    */
+
+    const categoryCount =
+        new Set(
+            rows.map((book) => book.category)
+        ).size;
+
+
+    /*
+    ============================================================
+                            UI
+    ============================================================
+    */
+
     return (
 
         <DashboardLayout>
-        <Card
-    sx={{
-        mb:4,
-        borderRadius:5,
-        background:
-            "linear-gradient(135deg,#1976D2,#512DA8)",
-        color:"#fff",
-        overflow:"hidden"
-    }}
->
 
-<CardContent>
+            {/* ==================================================
+                                HEADER
+            ================================================== */}
 
-<Box
-sx={{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center"
-}}
->
+            <Card
+                sx={{
+                    mb: 4,
 
-<Box>
+                    borderRadius: 5,
 
-<Typography
-variant="h4"
-fontWeight="bold"
->
+                    background:
+                        "linear-gradient(135deg,#1976D2,#512DA8)",
 
-📚 Books Management
+                    color: "#fff",
 
-</Typography>
+                    overflow: "hidden",
 
-<Typography
-sx={{
-mt:1,
-opacity:.9
-}}
->
+                    transition: ".35s",
 
-Manage, organize and maintain your complete library collection.
+                    "&:hover": {
 
-</Typography>
+                        boxShadow:
+                            "0 18px 40px rgba(25,118,210,.25)"
 
-</Box>
+                    }
+                }}
+            >
 
-<Avatar
-sx={{
-
-width:80,
-height:80,
-bgcolor:"rgba(255,255,255,.2)",
-border:"3px solid rgba(255,255,255,.35)",
-mr: 5
-}}
->
-
-<LibraryBooksIcon sx={{fontSize:45}}/>
-
-</Avatar>
-
-</Box>
-
-</CardContent>
-
-</Card>
-<Grid
-container
-spacing={3}
-sx={{mb:4}}
->
-
-<Grid size={{xs:12,md:3}}>
-
-<Card
-sx={{
-    height:150,
-
-    borderRadius:4,
-
-    background:"#EAF4FF",
-
-    border:"1px solid #D8E8FF",
-
-    boxShadow:"0 8px 25px rgba(0,0,0,.05)",
-
-    transition:"all .35s ease",
-
-    cursor:"pointer",
-
-    "&:hover":{
-
-        transform:"translateY(-8px)",
-
-        boxShadow:"0 18px 40px rgba(25,118,210,.18)",
-
-        borderColor:"#1976D2"
-
-    }
-
-}}
->
-
-<CardContent
-sx={{
-height:"100%"
-}}
->
-
-<Stack
-direction="row"
-
-justifyContent="space-between"
-
-alignItems="center"
-
-sx={{
-height:"100%"
-}}
->
-
-<Box>
-
-<Typography color="text.secondary">
-
-Total Books
-
-</Typography>
-
-<Typography
-
-variant="h3"
-
-fontWeight={800}
-
-sx={{
-
-mt:1,
-
-color:"#1A237E"
-
-}}
-
->
-{summary?.totalBooks || 0}
-</Typography>
-
-</Box>
-
-<Avatar
-
-sx={{
-
-width:70,
-
-height:70,
-
-bgcolor:"#1976D2",
-
-boxShadow:"0 8px 20px rgba(25,118,210,.25)"
-
-}}
-
->
-    
-
-<MenuBookIcon/>
-
-</Avatar>
-
-</Stack>
-
-</CardContent>
-
-</Card>
-
-</Grid>
-
-<Grid size={{xs:12,md:3}}>
-
-<Card
-sx={{
-    height:150,
-
-    borderRadius:4,
-
-    background:"#EAF4FF",
-
-    border:"1px solid #D8E8FF",
-
-    boxShadow:"0 8px 25px rgba(0,0,0,.05)",
-
-    transition:"all .35s ease",
-
-    cursor:"pointer",
-
-    "&:hover":{
-
-        transform:"translateY(-8px)",
-
-        boxShadow:"0 18px 40px rgba(25,118,210,.18)",
-
-        borderColor:"#1976D2"
-
-    }
-
-}}
->
-
-<CardContent
-sx={{
-height:"100%"
-}}
->
-<Stack
-direction="row"
-
-justifyContent="space-between"
-
-alignItems="center"
-
-sx={{
-height:"100%"
-}}
->
-<Box>
-
-<Typography>
-
-Available
-
-</Typography>
-
-<Typography
-
-variant="h3"
-
-fontWeight={800}
-
-sx={{
-
-mt:1,
-
-color:"#1A237E"
-
-}}
-
->
-
-{summary?.availableBooks || 0}
-</Typography>
-
-</Box>
-
-<Avatar
-
-sx={{
-
-width:70,
-
-height:70,
-
-bgcolor:"#2E7D32",
-
-boxShadow:"0 8px 20px rgba(25,118,210,.25)"
-
-}}
-
->
-
-<CheckCircleIcon/>
-
-</Avatar>
-
-</Stack>
-
-</CardContent>
-
-</Card>
-
-</Grid>
-
-<Grid size={{xs:12,md:3}}>
-
-<Card
-sx={{
-    height:150,
-
-    borderRadius:4,
-
-    background:"#EAF4FF",
-
-    border:"1px solid #D8E8FF",
-
-    boxShadow:"0 8px 25px rgba(0,0,0,.05)",
-
-    transition:"all .35s ease",
-
-    cursor:"pointer",
-
-    "&:hover":{
-
-        transform:"translateY(-8px)",
-
-        boxShadow:"0 18px 40px rgba(25,118,210,.18)",
-
-        borderColor:"#1976D2"
-
-    }
-
-}}
->
-<CardContent
-sx={{
-height:"100%"
-}}
->
-
-<Stack
-direction="row"
-
-justifyContent="space-between"
-
-alignItems="center"
-
-sx={{
-height:"100%"
-}}
->
-
-<Box>
-
-<Typography>
-
-Issued
-
-</Typography>
-
-<Typography
-
-variant="h3"
-
-fontWeight={800}
-
-sx={{
-
-mt:1,
-
-color:"#1A237E"
-
-}}
-
->
-
-{summary?.borrowedBooks || 0}
-
-</Typography>
-
-</Box>
-
-<Avatar
-
-sx={{
-
-width:70,
-
-height:70,
-
-bgcolor:"#EF6C00",
-
-boxShadow:"0 8px 20px rgba(25,118,210,.25)"
-
-}}
-
->
-
-<AssignmentReturnedIcon/>
-
-</Avatar>
-
-</Stack>
-
-</CardContent>
-
-</Card>
-
-</Grid>
-
-<Grid size={{xs:12,md:3}}>
-
-<Card
-sx={{
-    height:150,
-
-    borderRadius:4,
-
-    background:"#EAF4FF",
-
-    border:"1px solid #D8E8FF",
-
-    boxShadow:"0 8px 25px rgba(0,0,0,.05)",
-
-    transition:"all .35s ease",
-
-    cursor:"pointer",
-
-    "&:hover":{
-
-        transform:"translateY(-8px)",
-
-        boxShadow:"0 18px 40px rgba(25,118,210,.18)",
-
-        borderColor:"#1976D2"
-
-    }
-
-}}
->
-
-<CardContent
-sx={{
-height:"100%"
-}}
->
-
-<Stack
-direction="row"
-
-justifyContent="space-between"
-
-alignItems="center"
-
-sx={{
-height:"100%"
-}}
->
-
-<Box>
-
-<Typography>
-
-Categories
-
-</Typography>
-
-<Typography
-
-variant="h3"
-
-fontWeight={800}
-
-sx={{
-
-mt:1,
-
-color:"#1A237E"
-
-}}
-
->
-
-{new Set(rows.map(x=>x.category)).size}
-
-</Typography>
-
-</Box>
-
-<Avatar
-
-sx={{
-
-width:70,
-
-height:70,
-
-bgcolor:"#8E24AA",
-
-boxShadow:"0 8px 20px rgba(25,118,210,.25)"
-
-}}
-
->
-
-<CategoryIcon/>
-
-</Avatar>
-
-</Stack>
-
-</CardContent>
-
-</Card>
-
-</Grid>
-
-</Grid>
-            <Box
-sx={{
-display:"flex",
-justifyContent:"space-between",
-alignItems:"center",
-mb:3,
-gap:2
-}}
->
-
-                <Typography
-                    variant="h4"
-                    fontWeight="bold"
-                >
-
-                    Books Management
-
-                </Typography>
-
-               <Button
-variant="contained"
-startIcon={<AddCircleIcon/>}
-onClick={()=>setOpenDialog(true)}
-sx={{
-borderRadius:3,
-px:3,
-fontWeight:"bold",
-textTransform:"none",
-background:
-"linear-gradient(135deg,#1976D2,#512DA8)"
-}}
->
-
-Add New Book
-
-</Button>
-
-            </Box>
-
-<Paper
-
-sx={{
-
-p:4,
-
-borderRadius:5,
-
-background:"#fff",
-
-border:"1px solid #72a0eb",
-
-boxShadow:"0 10px 30px rgba(7, 5, 5, 0.06)"
-
-}}
-
->
-
-<TextField
-fullWidth
-placeholder="Search by Title, Author or ISBN..."
-value={keyword}
-onChange={(e)=>handleSearch(e.target.value)}
-InputProps={{
-startAdornment:(
-<InputAdornment position="start">
-
-<SearchIcon color="primary"/>
-
-</InputAdornment>
-)
-}}
-sx={{
-mb:3,
-"& .MuiOutlinedInput-root":{
-borderRadius:4,
-background:"#FAFAFA"
-}
-}}
-/>
-
-                <Box
+                <CardContent
                     sx={{
-                        height: 500,
-                        width: "100%",
-                        
+                        p: {
+                            xs: 2.5,
+                            sm: 3,
+                            md: 4
+                        },
+
+                        "&:last-child": {
+                            pb: {
+                                xs: 2.5,
+                                sm: 3,
+                                md: 4
+                            }
+                        }
                     }}
                 >
 
-                  <DataGrid
+                    <Box
+                        sx={{
+                            display: "flex",
 
-rows={rows}
+                            justifyContent:
+                                "space-between",
 
-columns={columns}
+                            alignItems: "center",
 
-rowCount={rowCount}
+                            gap: 3,
 
-paginationMode="server"
+                            flexWrap: {
+                                xs: "wrap",
+                                sm: "nowrap"
+                            }
+                        }}
+                    >
 
-paginationModel={paginationModel}
+                        <Box
+                            sx={{
+                                flex: 1,
+                                minWidth: 0
+                            }}
+                        >
 
-onPaginationModelChange={setPaginationModel}
+                            <Typography
+                                variant="h4"
+                                fontWeight="bold"
+                                sx={{
+                                    fontSize: {
+                                        xs: "1.7rem",
+                                        sm: "2rem",
+                                        md: "2.125rem"
+                                    },
 
-pageSizeOptions={[5,10,20]}
+                                    lineHeight: 1.2
+                                }}
+                            >
 
-disableRowSelectionOnClick
+                                📚 Books Management
 
-sx={{
-    border: 0,
+                            </Typography>
 
-    "& .MuiDataGrid-columnHeaders": {
-      backgroundColor: "#1976D2",
-      color: "#fff",
-      borderRadius: "12px 12px 0 0",
-    },
 
-    "& .MuiDataGrid-columnHeader": {
-      backgroundColor: "#1976D2",
-      color: "#fff",
-    },
+                            <Typography
+                                sx={{
+                                    mt: 1,
 
-    "& .MuiDataGrid-columnHeaderTitle": {
-      fontWeight: "bold",
-      color: "#fff",
-      fontSize: "15px",
-    },
+                                    opacity: .9,
 
-    "& .MuiDataGrid-iconSeparator": {
-      display: "none",
-    },
+                                    fontSize: {
+                                        xs: ".9rem",
+                                        sm: "1rem"
+                                    }
+                                }}
+                            >
 
-    "& .MuiDataGrid-sortIcon": {
-      color: "#fff",
-    },
+                                Manage, organize and maintain
+                                your complete library collection.
 
-    "& .MuiDataGrid-menuIconButton": {
-      color: "#fff",
-    },
+                            </Typography>
 
-    "& .MuiDataGrid-row:hover": {
-      backgroundColor: "#F5F9FF",
-    },
+                        </Box>
 
-    "& .MuiDataGrid-cell": {
-      borderBottom: "1px solid #EEF2F7",
-    },
-  }}
 
-/>
+                        <Avatar
+                            sx={{
+                                width: {
+                                    xs: 60,
+                                    sm: 70,
+                                    md: 80
+                                },
+
+                                height: {
+                                    xs: 60,
+                                    sm: 70,
+                                    md: 80
+                                },
+
+                                flexShrink: 0,
+
+                                bgcolor:
+                                    "rgba(255,255,255,.2)",
+
+                                border:
+                                    "3px solid rgba(255,255,255,.35)",
+
+                                mr: {
+                                    xs: 0,
+                                    sm: 1,
+                                    md: 3
+                                },
+
+                                transition: ".3s",
+
+                                "&:hover": {
+
+                                    transform:
+                                        "scale(1.08) rotate(3deg)"
+
+                                }
+                            }}
+                        >
+
+                            <LibraryBooksIcon
+                                sx={{
+                                    fontSize: {
+                                        xs: 32,
+                                        sm: 38,
+                                        md: 45
+                                    }
+                                }}
+                            />
+
+                        </Avatar>
+
+                    </Box>
+
+                </CardContent>
+
+            </Card>
+
+
+            {/* ==================================================
+                         STATISTICS CARDS
+            ================================================== */}
+
+            <Grid
+                container
+                spacing={{
+                    xs: 2,
+                    sm: 2.5,
+                    md: 3
+                }}
+                sx={{
+                    mb: 4
+                }}
+            >
+
+                {/* TOTAL BOOKS */}
+
+                <Grid
+                    size={{
+                        xs: 12,
+                        sm: 6,
+                        lg: 3
+                    }}
+                >
+
+                    <Card
+                        sx={{
+                            height: 150,
+
+                            borderRadius: 4,
+
+                            background: "#EAF4FF",
+
+                            border:
+                                "1px solid #D8E8FF",
+
+                            boxShadow:
+                                "0 8px 25px rgba(0,0,0,.05)",
+
+                            transition:
+                                "all .35s ease",
+
+                            cursor: "pointer",
+
+                            "&:hover": {
+
+                                transform:
+                                    "translateY(-8px)",
+
+                                boxShadow:
+                                    "0 18px 40px rgba(25,118,210,.18)",
+
+                                borderColor:
+                                    "#1976D2"
+
+                            }
+                        }}
+                    >
+
+                        <CardContent
+                            sx={{
+                                height: "100%"
+                            }}
+                        >
+
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                sx={{
+                                    height: "100%"
+                                }}
+                            >
+
+                                <Box>
+
+                                    <Typography
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                    >
+                                        Total Books
+                                    </Typography>
+
+                                    <Typography
+                                        variant="h3"
+                                        fontWeight={800}
+                                        sx={{
+                                            mt: 1,
+                                            color: "#1A237E",
+                                            fontSize: {
+                                                xs: "2rem",
+                                                sm: "2.5rem"
+                                            }
+                                        }}
+                                    >
+
+                                        {summary?.totalBooks || 0}
+
+                                    </Typography>
+
+                                </Box>
+
+
+                                <Avatar
+                                    sx={{
+                                        width: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        height: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        bgcolor: "#1976D2",
+
+                                        boxShadow:
+                                            "0 8px 20px rgba(25,118,210,.25)"
+                                    }}
+                                >
+
+                                    <MenuBookIcon
+                                        sx={{
+                                            fontSize: {
+                                                xs: 28,
+                                                sm: 34
+                                            }
+                                        }}
+                                    />
+
+                                </Avatar>
+
+                            </Stack>
+
+                        </CardContent>
+
+                    </Card>
+
+                </Grid>
+
+
+                {/* AVAILABLE */}
+
+                <Grid
+                    size={{
+                        xs: 12,
+                        sm: 6,
+                        lg: 3
+                    }}
+                >
+
+                    <Card
+                        sx={{
+                            height: 150,
+
+                            borderRadius: 4,
+
+                            background: "#EAF4FF",
+
+                            border:
+                                "1px solid #D8E8FF",
+
+                            boxShadow:
+                                "0 8px 25px rgba(0,0,0,.05)",
+
+                            transition:
+                                "all .35s ease",
+
+                            cursor: "pointer",
+
+                            "&:hover": {
+
+                                transform:
+                                    "translateY(-8px)",
+
+                                boxShadow:
+                                    "0 18px 40px rgba(25,118,210,.18)",
+
+                                borderColor:
+                                    "#1976D2"
+
+                            }
+                        }}
+                    >
+
+                        <CardContent
+                            sx={{
+                                height: "100%"
+                            }}
+                        >
+
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                sx={{
+                                    height: "100%"
+                                }}
+                            >
+
+                                <Box>
+
+                                    <Typography
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                    >
+                                        Available
+                                    </Typography>
+
+                                    <Typography
+                                        variant="h3"
+                                        fontWeight={800}
+                                        sx={{
+                                            mt: 1,
+                                            color: "#1A237E",
+                                            fontSize: {
+                                                xs: "2rem",
+                                                sm: "2.5rem"
+                                            }
+                                        }}
+                                    >
+
+                                        {summary?.availableBooks || 0}
+
+                                    </Typography>
+
+                                </Box>
+
+
+                                <Avatar
+                                    sx={{
+                                        width: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        height: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        bgcolor: "#2E7D32",
+
+                                        boxShadow:
+                                            "0 8px 20px rgba(46,125,50,.25)"
+                                    }}
+                                >
+
+                                    <CheckCircleIcon
+                                        sx={{
+                                            fontSize: {
+                                                xs: 28,
+                                                sm: 34
+                                            }
+                                        }}
+                                    />
+
+                                </Avatar>
+
+                            </Stack>
+
+                        </CardContent>
+
+                    </Card>
+
+                </Grid>
+
+
+                {/* ISSUED */}
+
+                <Grid
+                    size={{
+                        xs: 12,
+                        sm: 6,
+                        lg: 3
+                    }}
+                >
+
+                    <Card
+                        sx={{
+                            height: 150,
+
+                            borderRadius: 4,
+
+                            background: "#EAF4FF",
+
+                            border:
+                                "1px solid #D8E8FF",
+
+                            boxShadow:
+                                "0 8px 25px rgba(0,0,0,.05)",
+
+                            transition:
+                                "all .35s ease",
+
+                            cursor: "pointer",
+
+                            "&:hover": {
+
+                                transform:
+                                    "translateY(-8px)",
+
+                                boxShadow:
+                                    "0 18px 40px rgba(25,118,210,.18)",
+
+                                borderColor:
+                                    "#1976D2"
+
+                            }
+                        }}
+                    >
+
+                        <CardContent
+                            sx={{
+                                height: "100%"
+                            }}
+                        >
+
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                sx={{
+                                    height: "100%"
+                                }}
+                            >
+
+                                <Box>
+
+                                    <Typography
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                    >
+                                        Issued
+                                    </Typography>
+
+                                    <Typography
+                                        variant="h3"
+                                        fontWeight={800}
+                                        sx={{
+                                            mt: 1,
+                                            color: "#1A237E",
+                                            fontSize: {
+                                                xs: "2rem",
+                                                sm: "2.5rem"
+                                            }
+                                        }}
+                                    >
+
+                                        {summary?.borrowedBooks || 0}
+
+                                    </Typography>
+
+                                </Box>
+
+
+                                <Avatar
+                                    sx={{
+                                        width: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        height: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        bgcolor: "#EF6C00",
+
+                                        boxShadow:
+                                            "0 8px 20px rgba(239,108,0,.25)"
+                                    }}
+                                >
+
+                                    <AssignmentReturnedIcon
+                                        sx={{
+                                            fontSize: {
+                                                xs: 28,
+                                                sm: 34
+                                            }
+                                        }}
+                                    />
+
+                                </Avatar>
+
+                            </Stack>
+
+                        </CardContent>
+
+                    </Card>
+
+                </Grid>
+
+
+                {/* CATEGORIES */}
+
+                <Grid
+                    size={{
+                        xs: 12,
+                        sm: 6,
+                        lg: 3
+                    }}
+                >
+
+                    <Card
+                        sx={{
+                            height: 150,
+
+                            borderRadius: 4,
+
+                            background: "#EAF4FF",
+
+                            border:
+                                "1px solid #D8E8FF",
+
+                            boxShadow:
+                                "0 8px 25px rgba(0,0,0,.05)",
+
+                            transition:
+                                "all .35s ease",
+
+                            cursor: "pointer",
+
+                            "&:hover": {
+
+                                transform:
+                                    "translateY(-8px)",
+
+                                boxShadow:
+                                    "0 18px 40px rgba(25,118,210,.18)",
+
+                                borderColor:
+                                    "#1976D2"
+
+                            }
+                        }}
+                    >
+
+                        <CardContent
+                            sx={{
+                                height: "100%"
+                            }}
+                        >
+
+                            <Stack
+                                direction="row"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                sx={{
+                                    height: "100%"
+                                }}
+                            >
+
+                                <Box>
+
+                                    <Typography
+                                        color="text.secondary"
+                                        fontWeight={600}
+                                    >
+                                        Categories
+                                    </Typography>
+
+                                    <Typography
+                                        variant="h3"
+                                        fontWeight={800}
+                                        sx={{
+                                            mt: 1,
+                                            color: "#1A237E",
+                                            fontSize: {
+                                                xs: "2rem",
+                                                sm: "2.5rem"
+                                            }
+                                        }}
+                                    >
+
+                                        {categoryCount}
+
+                                    </Typography>
+
+                                </Box>
+
+
+                                <Avatar
+                                    sx={{
+                                        width: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        height: {
+                                            xs: 55,
+                                            sm: 65,
+                                            md: 70
+                                        },
+
+                                        bgcolor: "#8E24AA",
+
+                                        boxShadow:
+                                            "0 8px 20px rgba(142,36,170,.25)"
+                                    }}
+                                >
+
+                                    <CategoryIcon
+                                        sx={{
+                                            fontSize: {
+                                                xs: 28,
+                                                sm: 34
+                                            }
+                                        }}
+                                    />
+
+                                </Avatar>
+
+                            </Stack>
+
+                        </CardContent>
+
+                    </Card>
+
+                </Grid>
+
+            </Grid>
+
+
+            {/* ==================================================
+                         SEARCH + ADD BOOK
+            ================================================== */}
+
+            <Paper
+                sx={{
+                    p: {
+                        xs: 2,
+                        sm: 3,
+                        md: 4
+                    },
+
+                    borderRadius: 5,
+
+                    background: "#fff",
+
+                    border:
+                        "1px solid #72a0eb",
+
+                    boxShadow:
+                        "0 10px 30px rgba(7,5,5,.06)",
+
+                    mb: 3
+                }}
+            >
+
+                <Box
+                    sx={{
+                        display: "flex",
+
+                        alignItems: {
+                            xs: "stretch",
+                            sm: "center"
+                        },
+
+                        justifyContent:
+                            "space-between",
+
+                        gap: 2,
+
+                        flexDirection: {
+                            xs: "column",
+                            sm: "row"
+                        }
+                    }}
+                >
+
+                    <TextField
+                        fullWidth
+                        placeholder="Search by Title, Author or ISBN..."
+                        value={keyword}
+                        onChange={(e) =>
+                            handleSearch(e.target.value)
+                        }
+
+                        InputProps={{
+                            startAdornment: (
+
+                                <InputAdornment position="start">
+
+                                    <SearchIcon
+                                        color="primary"
+                                    />
+
+                                </InputAdornment>
+
+                            )
+                        }}
+
+                        sx={{
+                            flex: 1,
+
+                            "& .MuiOutlinedInput-root": {
+
+                                borderRadius: 3,
+
+                                transition: ".25s",
+
+                                "&:hover fieldset": {
+
+                                    borderColor:
+                                        "#1976D2"
+
+                                },
+
+                                "&.Mui-focused fieldset": {
+
+                                    borderColor:
+                                        "#1976D2"
+
+                                }
+
+                            }
+                        }}
+                    />
+
+
+                    <Button
+                        variant="contained"
+                        startIcon={<AddCircleIcon />}
+                        onClick={() =>
+                            setOpenDialog(true)
+                        }
+
+                        sx={{
+                            borderRadius: 3,
+
+                            px: {
+                                xs: 2,
+                                sm: 3
+                            },
+
+                            py: 1.5,
+
+                            minWidth: {
+                                xs: "100%",
+                                sm: 180
+                            },
+
+                            fontWeight: "bold",
+
+                            textTransform: "none",
+
+                            whiteSpace: "nowrap",
+
+                            background:
+                                "linear-gradient(135deg,#1976D2,#512DA8)",
+
+                            transition: ".3s",
+
+                            "&:hover": {
+
+                                background:
+                                    "linear-gradient(135deg,#1565C0,#4527A0)",
+
+                                transform:
+                                    "translateY(-2px)",
+
+                                boxShadow:
+                                    "0 8px 20px rgba(25,118,210,.25)"
+
+                            }
+                        }}
+                    >
+
+                        Add New Book
+
+                    </Button>
+
                 </Box>
 
             </Paper>
 
+
+            {/* ==================================================
+                             BOOK TABLE
+            ================================================== */}
+
+            <Paper
+                sx={{
+                    p: {
+                        xs: 1.5,
+                        sm: 2,
+                        md: 3
+                    },
+
+                    borderRadius: 5,
+
+                    background: "#fff",
+
+                    border:
+                        "1px solid #72a0eb",
+
+                    boxShadow:
+                        "0 10px 30px rgba(7,5,5,.06)",
+
+                    overflow: "hidden"
+                }}
+            >
+
+                <Typography
+                    variant="h5"
+                    fontWeight="bold"
+                    sx={{
+                        px: {
+                            xs: 1,
+                            sm: 2
+                        },
+
+                        pt: {
+                            xs: 1,
+                            sm: 2
+                        },
+
+                        pb: 2,
+
+                        fontSize: {
+                            xs: "1.25rem",
+                            sm: "1.5rem"
+                        }
+                    }}
+                >
+
+                    📚 Library Books
+
+                </Typography>
+
+
+                {/* 
+                    Important:
+                    Mobile par DataGrid columns hide nahi hongi.
+                    Table horizontally scroll ho sakti hai.
+                */}
+
+                <Box
+                    sx={{
+                        width: "100%",
+
+                        overflowX: "auto",
+
+                        WebkitOverflowScrolling: "touch"
+                    }}
+                >
+
+                    <Box
+                        sx={{
+                            height: {
+                                xs: 500,
+                                sm: 550,
+                                md: 600
+                            },
+
+                            minWidth: {
+                                xs: 1050,
+                                md: "100%"
+                            },
+
+                            width: "100%"
+                        }}
+                    >
+
+                        <DataGrid
+
+                            rows={rows}
+
+                            columns={columns}
+
+                            rowCount={rowCount}
+
+                            paginationMode="server"
+
+                            paginationModel={paginationModel}
+
+                            onPaginationModelChange={
+                                setPaginationModel
+                            }
+
+                            pageSizeOptions={[
+                                5,
+                                10,
+                                20
+                            ]}
+
+                            disableRowSelectionOnClick
+
+
+                            sx={{
+
+                                border: 0,
+
+                                "& .MuiDataGrid-columnHeaders": {
+
+                                    backgroundColor:
+                                        "#1976D2",
+
+                                    color: "#fff",
+
+                                    borderRadius:
+                                        "12px 12px 0 0"
+
+                                },
+
+
+                                "& .MuiDataGrid-columnHeader": {
+
+                                    backgroundColor:
+                                        "#1976D2",
+
+                                    color: "#fff"
+
+                                },
+
+
+                                "& .MuiDataGrid-columnHeaderTitle": {
+
+                                    fontWeight: "bold",
+
+                                    color: "#fff",
+
+                                    fontSize: "15px"
+
+                                },
+
+
+                                "& .MuiDataGrid-iconSeparator": {
+
+                                    display: "none"
+
+                                },
+
+
+                                "& .MuiDataGrid-sortIcon": {
+
+                                    color: "#fff"
+
+                                },
+
+
+                                "& .MuiDataGrid-menuIconButton": {
+
+                                    color: "#fff"
+
+                                },
+
+
+                                /* Existing row hover */
+
+                                "& .MuiDataGrid-row:hover": {
+
+                                    backgroundColor:
+                                        "#F5F9FF"
+
+                                },
+
+
+                                "& .MuiDataGrid-cell": {
+
+                                    borderBottom:
+                                        "1px solid #EEF2F7"
+
+                                },
+
+
+                                /* Mobile touch-friendly rows */
+
+                                "@media (max-width:600px)": {
+
+                                    "& .MuiDataGrid-cell": {
+
+                                        fontSize: "13px"
+
+                                    },
+
+                                    "& .MuiDataGrid-columnHeaderTitle": {
+
+                                        fontSize: "13px"
+
+                                    }
+
+                                }
+
+                            }}
+
+                        />
+
+                    </Box>
+
+                </Box>
+
+            </Paper>
+
+
+            {/* ==================================================
+                           ADD BOOK DIALOG
+            ================================================== */}
+
             <AddBookDialog
+
                 open={openDialog}
-                handleClose={() => setOpenDialog(false)}
-                loadBooks={loadBooks}
+
+                handleClose={() =>
+                    setOpenDialog(false)
+                }
+
+                loadBooks={() => {
+
+                    loadBooks();
+
+                    loadSummary();
+
+                }}
+
             />
 
+
+            {/* ==================================================
+                           EDIT BOOK DIALOG
+            ================================================== */}
+
             <EditBookDialog
+
                 open={editDialogOpen}
-                handleClose={() => setEditDialogOpen(false)}
+
+                handleClose={() =>
+                    setEditDialogOpen(false)
+                }
+
                 book={selectedBook}
-                loadBooks={loadBooks}
+
+                loadBooks={() => {
+
+                    loadBooks();
+
+                    loadSummary();
+
+                }}
+
             />
 
         </DashboardLayout>

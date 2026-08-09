@@ -1,203 +1,270 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Reports from "../pages/admin/Reports";
-import Login from "../pages/auth/Login";
+import { lazy, Suspense } from "react";
+import {
+    BrowserRouter,
+    Routes,
+    Route
+} from "react-router-dom";
+
 import ProtectedRoute from "./ProtectedRoute";
-import StudentMyBooks from "../pages/student/StudentMyBooks";
 
-/* =========================
-   ADMIN PAGES
-========================= */
+// =====================================================
+// LOGIN
+// Keep Login directly loaded
+// =====================================================
 
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import Books from "../pages/admin/Books";
-import Users from "../pages/admin/Users";
-import Borrow from "../pages/admin/Borrow";
-import Profile from "../pages/admin/Profile";
-import Notifications from "../pages/admin/Notifications";
+import Login from "../pages/auth/Login";
 
-/* =========================
-   STUDENT PAGES
-========================= */
+// =====================================================
+// ADMIN PAGES
+// Lazy loaded for faster initial application load
+// =====================================================
 
-import StudentDashboard from "../pages/student/StudentDashboard";
-import StudentBooks from "../pages/student/StudentBooks";
-import StudentBorrowHistory from "../pages/student/StudentBorrowHistory";
-import StudentNotifications from "../pages/student/StudentNotifications";
-import StudentProfile from "../pages/student/StudentProfile";
-import StudentFineHistory from "../pages/student/StudentFineHistory";
-import StudentReturnedBooks from "../pages/student/StudentReturnedBooks";
+const AdminDashboard = lazy(
+    () => import("../pages/admin/AdminDashboard")
+);
+
+const Books = lazy(
+    () => import("../pages/admin/Books")
+);
+
+const Users = lazy(
+    () => import("../pages/admin/Users")
+);
+
+const Borrow = lazy(
+    () => import("../pages/admin/Borrow")
+);
+
+const Reports = lazy(
+    () => import("../pages/admin/Reports")
+);
+
+const Notifications = lazy(
+    () => import("../pages/admin/Notifications")
+);
+
+const Profile = lazy(
+    () => import("../pages/admin/Profile")
+);
+
+// =====================================================
+// STUDENT PAGES
+// Lazy loaded for faster initial application load
+// =====================================================
+
+const StudentDashboard = lazy(
+    () => import("../pages/student/StudentDashboard")
+);
+
+const StudentMyBooks = lazy(
+    () => import("../pages/student/StudentMyBooks")
+);
+
+const StudentBorrowHistory = lazy(
+    () => import("../pages/student/StudentBorrowHistory")
+);
+
+const StudentNotifications = lazy(
+    () => import("../pages/student/StudentNotifications")
+);
+
+const StudentProfile = lazy(
+    () => import("../pages/student/StudentProfile")
+);
+
+const StudentFineHistory = lazy(
+    () => import("../pages/student/StudentFineHistory")
+);
+
+const StudentReturnedBooks = lazy(
+    () => import("../pages/student/StudentReturnedBooks")
+);
+
+// =====================================================
+// PAGE LOADER
+// Shown only while a lazy-loaded page is downloading
+// =====================================================
+
+function PageLoader() {
+    return (
+        <div
+            style={{
+                minHeight: "60vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "18px",
+                fontWeight: 600
+            }}
+        >
+            Loading...
+        </div>
+    );
+}
+
+// =====================================================
+// APP ROUTES
+// =====================================================
 
 function AppRoutes() {
-
     return (
-
         <BrowserRouter>
 
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
 
-                {/* =========================
-                    LOGIN
-                ========================= */}
+                <Routes>
 
-                <Route
-                    path="/"
-                    element={<Login />}
-                />
+                    {/* ================================================= */}
+                    {/* LOGIN */}
+                    {/* ================================================= */}
 
-                {/* =========================
-                    ADMIN ROUTES
-                ========================= */}
-
-                <Route
-                    path="/admin/dashboard"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <AdminDashboard />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/books"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Books />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/users"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Users />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/borrow"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Borrow />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/reports"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Reports />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/notifications"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Notifications />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                <Route
-                    path="/admin/profile"
-                    element={
-                        <ProtectedRoute allowedRole="ADMIN">
-
-                            <Profile />
-
-                        </ProtectedRoute>
-                    }
-                />
-
-                {/* =========================
-                    STUDENT ROUTES
-                ========================= */}
-
-                <Route
-    path="/student/dashboard"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentDashboard />
-        </ProtectedRoute>
-    }
-/>
+                    <Route
+                        path="/"
+                        element={<Login />}
+                    />
 
 
+                    {/* ================================================= */}
+                    {/* ADMIN ROUTES */}
+                    {/* ================================================= */}
 
-<Route
-    path="/student/history"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentBorrowHistory />
-        </ProtectedRoute>
-    }
-/>
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <AdminDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
 
-<Route
-    path="/student/notifications"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentNotifications />
-        </ProtectedRoute>
-    }
-/>
+                    <Route
+                        path="/admin/books"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Books />
+                            </ProtectedRoute>
+                        }
+                    />
 
-<Route
-    path="/student/profile"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentProfile />
-        </ProtectedRoute>
-    }
-/>
-                <Route
-                    path="/student/fines"
-                    element={
-                        <ProtectedRoute allowedRole="STUDENT">
+                    <Route
+                        path="/admin/users"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Users />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                            <StudentFineHistory />
+                    <Route
+                        path="/admin/borrow"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Borrow />
+                            </ProtectedRoute>
+                        }
+                    />
 
-                        </ProtectedRoute>
-                    }
-                />
-               <Route
-    path="/student/books"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentMyBooks />
-        </ProtectedRoute>
-    }
-/>
-<Route
-    path="/student/returned-books"
-    element={
-        <ProtectedRoute allowedRole="STUDENT">
-            <StudentReturnedBooks />
-        </ProtectedRoute>
-    }
-/>
-            </Routes>
+                    <Route
+                        path="/admin/reports"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Reports />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/admin/notifications"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Notifications />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/admin/profile"
+                        element={
+                            <ProtectedRoute allowedRole="ADMIN">
+                                <Profile />
+                            </ProtectedRoute>
+                        }
+                    />
+
+
+                    {/* ================================================= */}
+                    {/* STUDENT ROUTES */}
+                    {/* ================================================= */}
+
+                    <Route
+                        path="/student/dashboard"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/books"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentMyBooks />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/history"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentBorrowHistory />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/notifications"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentNotifications />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/profile"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentProfile />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/fines"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentFineHistory />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/student/returned-books"
+                        element={
+                            <ProtectedRoute allowedRole="STUDENT">
+                                <StudentReturnedBooks />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                </Routes>
+
+            </Suspense>
 
         </BrowserRouter>
-
     );
-
 }
 
 export default AppRoutes;

@@ -21,19 +21,24 @@ function DashboardLayout({ children }) {
                 onClose={() => setOpen(false)}
             />
 
-            <Box
-                sx={{
-                    mt: "70px",
-                    p: 3,
-                    width: "100%",
-                    bgcolor: "#F5F7FB",
-                    minHeight: "100vh"
-                }}
-            >
-
-                {children}
-
-            </Box>
+           <Box
+    sx={{
+        mt: { xs: "64px", sm: "70px" },
+        p: {
+            xs: 1.5,
+            sm: 2,
+            md: 3,
+        },
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+        bgcolor: "#F5F7FB",
+        minHeight: "100vh",
+        boxSizing: "border-box",
+    }}
+>
+    {children}
+</Box>
 
         </>
 

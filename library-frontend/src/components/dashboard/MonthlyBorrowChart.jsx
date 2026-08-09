@@ -70,7 +70,10 @@ function MonthlyBorrowChart() {
 
                         borderSkipped: false,
 
-                        barThickness: 38,
+                        // Responsive bar width
+                        barPercentage: 0.7,
+
+                        categoryPercentage: 0.7,
 
                         backgroundColor: (context) => {
 
@@ -81,8 +84,9 @@ function MonthlyBorrowChart() {
                                 chartArea
                             } = chart;
 
-                            if (!chartArea)
+                            if (!chartArea) {
                                 return "#1976D2";
+                            }
 
                             const gradient =
                                 ctx.createLinearGradient(
@@ -98,7 +102,7 @@ function MonthlyBorrowChart() {
                             );
 
                             gradient.addColorStop(
-                                .5,
+                                0.5,
                                 "#42A5F5"
                             );
 
@@ -117,11 +121,12 @@ function MonthlyBorrowChart() {
 
             });
 
-        }
+        } catch (error) {
 
-        catch (error) {
-
-            console.error(error);
+            console.error(
+                "Monthly borrow chart error:",
+                error
+            );
 
         }
 
@@ -133,12 +138,14 @@ function MonthlyBorrowChart() {
 
         maintainAspectRatio: false,
 
+        animation: {
+            duration: 500
+        },
+
         plugins: {
 
             legend: {
-
                 display: false
-
             },
 
             tooltip: {
@@ -150,15 +157,11 @@ function MonthlyBorrowChart() {
                 cornerRadius: 8,
 
                 titleFont: {
-
                     size: 14
-
                 },
 
                 bodyFont: {
-
                     size: 13
-
                 }
 
             }
@@ -170,9 +173,7 @@ function MonthlyBorrowChart() {
             x: {
 
                 grid: {
-
                     display: false
-
                 },
 
                 ticks: {
@@ -180,11 +181,15 @@ function MonthlyBorrowChart() {
                     color: "#64748B",
 
                     font: {
-
                         weight: "bold"
+                    },
 
-                    }
+                    // Mobile par labels overlap na karein
+                    autoSkip: true,
 
+                    maxRotation: 45,
+
+                    minRotation: 0
                 }
 
             },
@@ -197,14 +202,14 @@ function MonthlyBorrowChart() {
 
                     stepSize: 1,
 
-                    color: "#64748B"
+                    color: "#64748B",
 
+                    precision: 0
                 },
 
                 grid: {
 
                     color: "#E2E8F0"
-
                 }
 
             }
@@ -215,56 +220,199 @@ function MonthlyBorrowChart() {
 
     return (
 
-      <Paper
-    elevation={0}
-    sx={{
-        mt: 4,
-        p: 4,
-        borderRadius: 5,
+        <Paper
 
-background:
-"linear-gradient(135deg,#F6FAFF 0%,#EDF5FF 50%,#F9FCFF 100%)",
+            elevation={0}
 
-        border: "1px solid #b2d0f8",
+            sx={{
 
-        boxShadow:
-            "0 12px 30px rgba(30, 136, 243, 0.08)"
-    }}
->
+                mt: {
+                    xs: 2,
+                    sm: 3,
+                    md: 4
+                },
 
-<Typography
-    variant="h5"
-    fontWeight="bold"
-    sx={{
-        color: "#0F172A"
-    }}
-    mb={1}
->
-    📈 Monthly Borrow Analytics
-</Typography>
+                p: {
+                    xs: 2,
+                    sm: 3,
+                    md: 4
+                },
 
-<Typography
-    sx={{
-        color: "#64748B"
-    }}
-    mb={3}
->
-    Monthly borrowing statistics of library books
-</Typography>
+                borderRadius: {
+                    xs: 3,
+                    sm: 4,
+                    md: 5
+                },
+
+                background:
+                    "linear-gradient(135deg,#F6FAFF 0%,#EDF5FF 50%,#F9FCFF 100%)",
+
+                border:
+                    "1px solid #b2d0f8",
+
+                boxShadow:
+                    "0 12px 30px rgba(30, 136, 243, 0.08)",
+
+                width: "100%",
+
+                overflow: "hidden"
+
+            }}
+
+        >
+
+            {/* ================= TITLE ================= */}
+
+            <Typography
+
+                variant="h5"
+
+                fontWeight="bold"
+
+                sx={{
+
+                    color: "#0F172A",
+
+                    fontSize: {
+
+                        xs: "1.15rem",
+
+                        sm: "1.35rem",
+
+                        md: "1.5rem"
+
+                    },
+
+                    lineHeight: 1.3
+
+                }}
+
+                mb={1}
+
+            >
+
+                📈 Monthly Borrow Analytics
+
+            </Typography>
 
 
-            <Box sx={{ height: 380 }}>
+            {/* ================= DESCRIPTION ================= */}
 
-                {
+            <Typography
 
-                    chartData &&
+                sx={{
 
-                    <Bar
-                        data={chartData}
-                        options={options}
-                    />
+                    color: "#64748B",
 
-                }
+                    fontSize: {
+
+                        xs: "0.85rem",
+
+                        sm: "0.95rem",
+
+                        md: "1rem"
+
+                    },
+
+                    lineHeight: 1.5
+
+                }}
+
+                mb={{
+
+                    xs: 2,
+
+                    sm: 3
+
+                }}
+
+            >
+
+                Monthly borrowing statistics of library books
+
+            </Typography>
+
+
+            {/* ================= CHART ================= */}
+
+            <Box
+
+                sx={{
+
+                    position: "relative",
+
+                    width: "100%",
+
+                    height: {
+
+                        xs: 260,
+
+                        sm: 320,
+
+                        md: 380
+
+                    },
+
+                    overflowX: "auto",
+
+                    overflowY: "hidden"
+
+                }}
+
+            >
+
+                {chartData && (
+
+                    <Box
+
+                        sx={{
+
+                            height: "100%",
+
+                            width: {
+
+                                xs:
+                                    chartData.labels.length > 6
+                                        ? `${Math.max(
+                                            100,
+                                            chartData.labels.length * 75
+                                        )}%`
+                                        : "100%",
+
+                                sm: "100%",
+
+                                md: "100%"
+
+                            },
+
+                            minWidth: {
+
+                                xs:
+                                    chartData.labels.length > 6
+                                        ? 450
+                                        : "100%",
+
+                                sm: 0,
+
+                                md: 0
+
+                            }
+
+                        }}
+
+                    >
+
+                        <Bar
+
+                            data={chartData}
+
+                            options={options}
+
+                        />
+
+                    </Box>
+
+                )}
 
             </Box>
 

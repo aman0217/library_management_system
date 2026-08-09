@@ -25,11 +25,9 @@ import PaidIcon from "@mui/icons-material/Paid";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 function BookDetailsDialog({
-
     open,
     onClose,
     book
-
 }) {
 
     if (!book) return null;
@@ -63,20 +61,64 @@ function BookDetailsDialog({
             onClose={onClose}
             maxWidth="md"
             fullWidth
+            fullScreen={false}
             PaperProps={{
                 sx: {
-                    borderRadius: 5
+
+                    borderRadius: {
+                        xs: 2,
+                        sm: 3,
+                        md: 5
+                    },
+
+                    width: {
+                        xs: "calc(100% - 20px)",
+                        sm: "calc(100% - 32px)",
+                        md: "100%"
+                    },
+
+                    maxHeight: {
+                        xs: "calc(100vh - 20px)",
+                        sm: "calc(100vh - 32px)",
+                        md: "90vh"
+                    },
+
+                    overflow: "hidden"
+
                 }
             }}
         >
 
+            {/* ================= TITLE ================= */}
+
             <DialogTitle
                 sx={{
+
                     background:
                         "linear-gradient(135deg,#1976d2,#512DA8)",
+
                     color: "#fff",
+
                     fontWeight: "bold",
-                    fontSize: 26
+
+                    fontSize: {
+                        xs: 20,
+                        sm: 23,
+                        md: 26
+                    },
+
+                    px: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    py: {
+                        xs: 1.5,
+                        sm: 2
+                    },
+
+                    lineHeight: 1.3
+
                 }}
             >
 
@@ -84,39 +126,110 @@ function BookDetailsDialog({
 
             </DialogTitle>
 
-            <DialogContent sx={{ mt: 3 }}>
+            {/* ================= CONTENT ================= */}
+
+            <DialogContent
+                sx={{
+
+                    mt: {
+                        xs: 1,
+                        sm: 2,
+                        md: 3
+                    },
+
+                    px: {
+                        xs: 1.5,
+                        sm: 2.5,
+                        md: 3
+                    },
+
+                    pb: 2,
+
+                    overflowY: "auto",
+
+                    overflowX: "hidden"
+
+                }}
+            >
 
                 <Box
                     sx={{
+
                         display: "flex",
-                        gap: 4,
-                        flexWrap: {
-                            xs: "wrap",
-                            md: "nowrap"
-                        }
+
+                        gap: {
+                            xs: 2,
+                            sm: 3,
+                            md: 4
+                        },
+
+                        flexDirection: {
+                            xs: "column",
+                            md: "row"
+                        },
+
+                        alignItems: {
+                            xs: "center",
+                            md: "flex-start"
+                        },
+
+                        width: "100%"
+
                     }}
                 >
 
-                    {/* LEFT SIDE */}
+                    {/* ================= LEFT SIDE ================= */}
+
                     <Box
                         sx={{
-                            width: 220,
-                            textAlign: "center"
+
+                            width: {
+                                xs: "100%",
+                                sm: 220,
+                                md: 220
+                            },
+
+                            minWidth: {
+                                md: 220
+                            },
+
+                            textAlign: "center",
+
+                            flexShrink: 0
+
                         }}
                     >
 
                         {
+
                             book.coverImage ?
 
                                 <Box
                                     component="img"
                                     src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${book.coverImage}`}
+                                    alt={book.title || "Book cover"}
                                     sx={{
-                                        width: 180,
-                                        height: 240,
+
+                                        width: {
+                                            xs: 140,
+                                            sm: 165,
+                                            md: 180
+                                        },
+
+                                        height: {
+                                            xs: 190,
+                                            sm: 220,
+                                            md: 240
+                                        },
+
+                                        maxWidth: "100%",
+
                                         objectFit: "cover",
+
                                         borderRadius: 3,
+
                                         boxShadow: 5
+
                                     }}
                                 />
 
@@ -124,18 +237,39 @@ function BookDetailsDialog({
 
                                 <Avatar
                                     sx={{
-                                        width: 180,
-                                        height: 240,
+
+                                        width: {
+                                            xs: 140,
+                                            sm: 165,
+                                            md: 180
+                                        },
+
+                                        height: {
+                                            xs: 190,
+                                            sm: 220,
+                                            md: 240
+                                        },
+
                                         bgcolor: "#E3F2FD",
+
                                         color: "#1976d2",
+
                                         mx: "auto",
+
                                         borderRadius: 3
+
                                     }}
                                 >
 
                                     <MenuBookIcon
                                         sx={{
-                                            fontSize: 90
+
+                                            fontSize: {
+                                                xs: 65,
+                                                sm: 75,
+                                                md: 90
+                                            }
+
                                         }}
                                     />
 
@@ -144,29 +278,65 @@ function BookDetailsDialog({
                         }
 
                         <Chip
-
                             label={book.status}
-
                             color={getStatusColor(book.status)}
-
                             sx={{
-                                mt: 2,
-                                width: 140,
-                                fontWeight: "bold",
-                                fontSize: 15
-                            }}
 
+                                mt: 2,
+
+                                width: {
+                                    xs: 130,
+                                    sm: 140
+                                },
+
+                                fontWeight: "bold",
+
+                                fontSize: {
+                                    xs: 13,
+                                    sm: 15
+                                }
+
+                            }}
                         />
 
                     </Box>
-                                        {/* RIGHT SIDE */}
 
-                    <Box sx={{ flex: 1 }}>
+                    {/* ================= RIGHT SIDE ================= */}
+
+                    <Box
+                        sx={{
+
+                            flex: 1,
+
+                            width: {
+                                xs: "100%",
+                                md: "auto"
+                            },
+
+                            minWidth: 0
+
+                        }}
+                    >
 
                         <Typography
                             variant="h4"
                             fontWeight="bold"
                             color="primary"
+                            sx={{
+
+                                fontSize: {
+                                    xs: 24,
+                                    sm: 30,
+                                    md: 34
+                                },
+
+                                lineHeight: 1.2,
+
+                                wordBreak: "break-word",
+
+                                overflowWrap: "anywhere"
+
+                            }}
                         >
 
                             {book.title}
@@ -175,15 +345,35 @@ function BookDetailsDialog({
 
                         <Divider sx={{ my: 2 }} />
 
-                        <Grid container spacing={2}>
+                        {/* ================= BOOK + LIBRARY INFO ================= */}
+
+                        <Grid
+                            container
+                            spacing={{
+                                xs: 1.5,
+                                sm: 2
+                            }}
+                        >
+
+                            {/* BOOK INFORMATION */}
 
                             <Grid size={{ xs: 12, md: 6 }}>
 
                                 <Paper
                                     elevation={2}
                                     sx={{
-                                        p: 2,
-                                        borderRadius: 3
+
+                                        p: {
+                                            xs: 1.5,
+                                            sm: 2
+                                        },
+
+                                        borderRadius: 3,
+
+                                        height: "100%",
+
+                                        overflow: "hidden"
+
                                     }}
                                 >
 
@@ -199,16 +389,25 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
+                                        sx={{ minWidth: 0 }}
                                     >
 
                                         <PersonIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word",
+                                                overflowWrap: "anywhere"
+                                            }}
+                                        >
 
                                             <b>Author :</b> {book.author}
 
@@ -218,16 +417,25 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
+                                        sx={{ minWidth: 0 }}
                                     >
 
                                         <NumbersIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word",
+                                                overflowWrap: "anywhere"
+                                            }}
+                                        >
 
                                             <b>ISBN :</b> {book.isbn}
 
@@ -237,16 +445,25 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
+                                        sx={{ minWidth: 0 }}
                                     >
 
                                         <BusinessIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word",
+                                                overflowWrap: "anywhere"
+                                            }}
+                                        >
 
                                             <b>Publisher :</b> {book.publisher}
 
@@ -256,16 +473,25 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
+                                        sx={{ minWidth: 0 }}
                                     >
 
                                         <CategoryIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word",
+                                                overflowWrap: "anywhere"
+                                            }}
+                                        >
 
                                             <b>Category :</b> {book.category}
 
@@ -275,17 +501,26 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
+                                        sx={{ minWidth: 0 }}
                                     >
 
                                         <CalendarMonthIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word"
+                                            }}
+                                        >
 
-                                            <b>Publication :</b> {book.publicationYear}
+                                            <b>Publication :</b>{" "}
+                                            {book.publicationYear}
 
                                         </Typography>
 
@@ -295,13 +530,23 @@ function BookDetailsDialog({
 
                             </Grid>
 
+                            {/* LIBRARY INFORMATION */}
+
                             <Grid size={{ xs: 12, md: 6 }}>
 
                                 <Paper
                                     elevation={2}
                                     sx={{
-                                        p: 2,
-                                        borderRadius: 3
+
+                                        p: {
+                                            xs: 1.5,
+                                            sm: 2
+                                        },
+
+                                        borderRadius: 3,
+
+                                        height: "100%"
+
                                     }}
                                 >
 
@@ -317,18 +562,22 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
                                     >
 
                                         <LibraryBooksIcon
                                             color="success"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
                                         <Typography>
 
-                                            <b>Total Copies :</b> {book.totalCopies}
+                                            <b>Total Copies :</b>{" "}
+                                            {book.totalCopies}
 
                                         </Typography>
 
@@ -336,17 +585,21 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                     >
 
                                         <Inventory2Icon
                                             color="success"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
                                         <Typography>
 
-                                            <b>Available :</b> {book.availableCopies}
+                                            <b>Available :</b>{" "}
+                                            {book.availableCopies}
 
                                         </Typography>
 
@@ -357,12 +610,22 @@ function BookDetailsDialog({
                             </Grid>
 
                         </Grid>
-                                                <Paper
+
+                        {/* ================= BORROW INFORMATION ================= */}
+
+                        <Paper
                             elevation={2}
                             sx={{
+
                                 mt: 3,
-                                p: 2,
+
+                                p: {
+                                    xs: 1.5,
+                                    sm: 2
+                                },
+
                                 borderRadius: 3
+
                             }}
                         >
 
@@ -376,24 +639,38 @@ function BookDetailsDialog({
 
                             </Typography>
 
-                            <Grid container spacing={2}>
+                            <Grid
+                                container
+                                spacing={{
+                                    xs: 1.5,
+                                    sm: 2
+                                }}
+                            >
 
                                 <Grid size={{ xs: 12, md: 6 }}>
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
                                     >
 
                                         <CalendarMonthIcon
                                             color="primary"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word"
+                                            }}
+                                        >
 
-                                            <b>Issue Date :</b> {book.issueDate}
+                                            <b>Issue Date :</b>{" "}
+                                            {book.issueDate}
 
                                         </Typography>
 
@@ -401,18 +678,26 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
                                     >
 
                                         <CalendarMonthIcon
                                             color="warning"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word"
+                                            }}
+                                        >
 
-                                            <b>Due Date :</b> {book.dueDate}
+                                            <b>Due Date :</b>{" "}
+                                            {book.dueDate}
 
                                         </Typography>
 
@@ -420,15 +705,22 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                     >
 
                                         <CalendarMonthIcon
                                             color="success"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
-                                        <Typography>
+                                        <Typography
+                                            sx={{
+                                                wordBreak: "break-word"
+                                            }}
+                                        >
 
                                             <b>Return Date :</b>{" "}
 
@@ -448,19 +740,21 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                         mb={1.5}
                                     >
 
                                         <AccessTimeIcon
                                             color="info"
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
                                         <Typography>
 
                                             <b>Remaining Days :</b>{" "}
-
                                             {book.remainingDays}
 
                                         </Typography>
@@ -469,7 +763,7 @@ function BookDetailsDialog({
 
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        alignItems="flex-start"
                                     >
 
                                         <PaidIcon
@@ -478,7 +772,10 @@ function BookDetailsDialog({
                                                     ? "error"
                                                     : "success"
                                             }
-                                            sx={{ mr: 1 }}
+                                            sx={{
+                                                mr: 1,
+                                                flexShrink: 0
+                                            }}
                                         />
 
                                         <Typography
@@ -508,24 +805,44 @@ function BookDetailsDialog({
 
             </DialogContent>
 
+            {/* ================= ACTIONS ================= */}
+
             <DialogActions
                 sx={{
-                    px: 3,
-                    pb: 3
+
+                    px: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    pb: {
+                        xs: 2,
+                        sm: 3
+                    },
+
+                    pt: 1
+
                 }}
             >
 
                 <Button
-
                     variant="contained"
-
                     onClick={onClose}
-
                     sx={{
-                        borderRadius: 1,
-                        px: 2
-                    }}
 
+                        borderRadius: 1,
+
+                        px: {
+                            xs: 2.5,
+                            sm: 3
+                        },
+
+                        width: {
+                            xs: "100%",
+                            sm: "auto"
+                        }
+
+                    }}
                 >
 
                     Close

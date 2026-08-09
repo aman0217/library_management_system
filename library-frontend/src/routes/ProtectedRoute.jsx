@@ -1,59 +1,83 @@
 import { Navigate, useLocation } from "react-router-dom";
 
-function ProtectedRoute({ children }) {
-
-    const token = localStorage.getItem("token");
-
-    const role = localStorage.getItem("role");
+function ProtectedRoute({ children, allowedRole }) {
 
     const location = useLocation();
 
-    // =========================
-    // Not Logged In
-    // =========================
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    // =====================================================
+    // NOT LOGGED IN
+    // =====================================================
 
     if (!token) {
 
-        return <Navigate to="/" replace />;
+        return (
+            <Navigate
+                to="/"
+                replace
+                state={{
+                    from: location
+                }}
+            />
+        );
 
     }
 
-    // =========================
-    // Admin Routes
-    // =========================
+    // =====================================================
+    // ROLE CHECK
+    // =====================================================
 
-    if (
+    if (allowedRole === "ADMIN") {
 
-        location.pathname.startsWith("/admin") &&
+        /*
+         * ADMIN routes are accessible by:
+         *
+         * ADMIN
+         * LIBRARIAN
+         */
 
-        role !== "ADMIN" &&
+        if (
+            role !== "ADMIN" &&
+            role !== "LIBRARIAN"
+        ) {
 
-        role !== "LIBRARIAN"
+            return (
+                <Navigate
+                    to="/"
+                    replace
+                />
+            );
 
-    ) {
+        }
 
-        return <Navigate to="/" replace />;
+    }
+
+    // =====================================================
+    // STUDENT CHECK
+    // =====================================================
+
+    if (allowedRole === "STUDENT") {
+
+        if (role !== "STUDENT") {
+
+            return (
+                <Navigate
+                    to="/"
+                    replace
+                />
+            );
+
+        }
 
     }
 
-    // =========================
-    // Student Routes
-    // =========================
-
-    if (
-
-        location.pathname.startsWith("/student") &&
-
-        role !== "STUDENT"
-
-    ) {
-
-        return <Navigate to="/" replace />;
-
-    }
+    // =====================================================
+    // AUTHENTICATED + AUTHORIZED
+    // =====================================================
 
     return children;
-
 }
 
 export default ProtectedRoute;
